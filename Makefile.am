@@ -1,4 +1,6 @@
 bin_PROGRAMS = quux
 
 quux_SOURCES = \
-    main.c
+    cell.c \
+    main.c \
+    unit_cell.c
