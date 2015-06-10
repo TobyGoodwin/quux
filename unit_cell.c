@@ -1,62 +1,51 @@
-#include <assert.h>
+#include <stdio.h>
 
 #include "cell.h"
+#include "streq.h"
+
+int n = 1;
+
+void check(int x) {
+    if (!x) printf("not ");
+    printf("ok %d\n", n++);
+}
 
 /* the nil cell */
 void test0(void) {
-	Cell *c = cell_nil;
-	assert(cell_nullp(c));
+    Cell *c = cell_nil;
+    check(cell_nullp(c));
 }
 
-#if 0
 void test1(void) {
-	Ref(char *, a, "Hunoze?");
-	Ref(Cell *, c, cell_new_string(a));
-	gc();
-	assert(cell_atomp(c));
-	assert(streq(cell_car_string(c), "Hunoze?"));
-	RefEnd2(c, a);
+    char *a = "Hunoze?";
+    Cell * c = cell_new_string(a);
+    check(cell_atomp(c));
+    check(streq(cell_car_string(c), "Hunoze?"));
 }
 
-#if 0
-void test2(void) {
-	Ref(char *, a0, "foo");
-	Ref(char *, a1, "bar");
-	Ref(Cell *, c0, cell_new_string(a1));
-	Ref(Cell *, c1, cell_cons_string(a0, c0));
-	memdump(); gc(); memdump();
-	assert(cell_car_t(c1) == cell_atom);
-	assert(streq(cell_car_atom(c1), "foo"));
-	assert(cell_cdr_t(c1) == cell_cell);
-	assert(cell_car_t(cell_cdr_cell(c1)) == cell_atom);
-	assert(streq(cell_car_atom(cell_cdr_cell(c1)), "bar"));
-	assert(cell_cdr_t(cell_cdr_cell(c1)) == cell_nil);
-	RefEnd4(c1, c0, a1, a0);
-}
-#endif
 void test2(void) {
     char *s;
-    Ref(Cell *, c0, cell_cons_string("bar", cell_nil));
-    Ref(Cell *, c1, cell_cons_string("foo", c0));
-    memdump(); gc(); memdump();
-    assert(!cell_atomp(c1));
-    assert(streq(cell_car_string(c1), "foo"));
-    assert(!cell_atomp(c0));
-    assert(streq(cell_car_string(c0), "bar"));
-    assert(cell_cdr(c0) == cell_nil);
+    Cell *c0 = cell_cons_string("bar", cell_nil);
+    Cell *c1 = cell_cons_string("foo", c0);
+    check(!cell_atomp(c1));
+    check(streq(cell_car_string(c1), "foo"));
+    check(!cell_atomp(c0));
+    check(streq(cell_car_string(c0), "bar"));
+    check(cell_cdr(c0) == cell_nil);
     c0 = cell_cleaveM(c1);
-    assert(cell_pairp(c0));
-    assert(cell_atomp(c1));
+    check(cell_pairp(c0));
+    check(cell_atomp(c1));
 
+#if 0
     s = str("%O", c1);
     print("%s\n", s);
-    assert(streq(s, "foo"));
+    check(streq(s, "foo"));
 
     s = str("%O", c0);
     print("%s\n", s);
-    assert(streq(s, "(bar)"));
+    check(streq(s, "(bar)"));
+#endif
 
-    RefEnd2(c1, c0);
 }
 
 #if 0
@@ -81,17 +70,18 @@ void test3(void) {
 	RefEnd4(c1, c0, a1, a0);
 }
 #endif
+
 void test3(void) {
-	Ref(Cell *, c0, cell_cons_string("bar", cell_nil));
-	Ref(Cell *, c1, cell_cons_string("foo", c0));
-	assert(cell_pairp(c0));
-	assert(cell_pairp(c1));
-	assert(streq(cell_car_string(c1), "foo"));
-	assert(cell_atomp(cell_car(c1)));
-	assert(streq(cell_car_string(cell_car(c1)), "foo"));
-	RefEnd2(c1, c0);
+    Cell *c0 = cell_cons_string("bar", cell_nil);
+    Cell *c1 = cell_cons_string("foo", c0);
+    check(cell_pairp(c0));
+    check(cell_pairp(c1));
+    check(streq(cell_car_string(c1), "foo"));
+    check(cell_atomp(cell_car(c1)));
+    check(streq(cell_car_string(cell_car(c1)), "foo"));
 }
 
+#if 0
 /* construct the flat list (foo bar baz qux) */
 Cell *fbbq(void) {
 	Ref(Cell *, c3, cell_nil);
@@ -216,3 +206,10 @@ void test9(void) {
 }
 
 #endif
+
+void unit_cell(void) {
+    printf("1..10\n");
+    test0();
+    test1();
+    test2();
+}

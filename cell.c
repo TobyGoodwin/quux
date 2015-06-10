@@ -17,11 +17,13 @@
  * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 #include <gc.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "cell.h"
+#include "streq.h"
 
 /* A Cell can hold either a pair or an atom. If it holds a pair, there
  * is a type attached to both the car and the cdr. If it holds an atom,
@@ -168,22 +170,17 @@ void cell_car_set_closure(Cell *c, Closure *a) {
 #endif
 
 /* accessors */
-Cell *cell_nullp(Cell *c) {
-    if (!c) return cell_true;
-    return cell_nil;
-}
-
-Cell *cell_pairp(Cell *c) {
-    if (cell_atomp(c))
-	return cell_nil;
-    return cell_true;
+int cell_nullp(Cell *c) {
+    return !c;
 }
 
 /* As in Scheme, nil is an atom (it is not a pair). */
-Cell *cell_atomp(Cell *c) {
-    if (!c || c->cdr_type == cell_atom)
-	return cell_true;
-    return cell_nil;
+int cell_atomp(Cell *c) {
+    return !c || c->cdr_type == cell_atom;
+}
+
+int cell_pairp(Cell *c) {
+    return !cell_atomp(c);
 }
 
 Cell *cell_cellp(Cell *c) {
@@ -206,26 +203,26 @@ int cell_closurep(Cell *c) {
 	return c->car_type == cell_closure;
 }
 
-#if 0
 /* Because types are not completely boxed, car may need to allocate a
  * new Cell and copy its result into it. This is a potentially expensive
  * operation...
  */
-Cell *cell_car(Cell *c0) {
-	if (c0->car_type == cell_cell)
-		return c0->car.cell;
-	Ref(Cell *, cell, cell_nil);
-	Ref(Cell *, c, c0);
-	cell = gcnew(Cell);
-	++cell_count;
-	cell->car_type = c->car_type;
-	cell->car.generic = c->car.generic;
-	cell->cdr_type = cell_atom;
-	cell->cdr.generic = (void *)0xdeadbeef;
-	RefEnd(c);
-	RefReturn(cell);
+Cell *cell_car(Cell *c) {
+    Cell *cell;
+
+    if (c->car_type == cell_cell)
+        return c->car.cell;
+    cell = cell_nil;
+    cell = GC_MALLOC(sizeof *cell);
+    ++cell_count;
+    cell->car_type = c->car_type;
+    cell->car.generic = c->car.generic;
+    cell->cdr_type = cell_atom;
+    cell->cdr.generic = (void *)0xdeadbeef;
+    return cell;
 }
 
+#if 0
 /* ... and so we provide additional accessors for when the result type
  * is known.
  */
@@ -234,20 +231,16 @@ long cell_car_fxnum(Cell *c) {
     assert(cell_fxnump(c));
     return c->car.fxnum;
 }
+#endif
 
 char *cell_car_string(Cell *c) {
-	assert(c->car_type == cell_string);
-	return c->car.string;
+    assert(c->car_type == cell_string);
+    return c->car.string;
 }
 
 Cell *cell_car_cell(Cell *c) {
-	assert(c->car_type == cell_cell);
-	return c->car.cell;
-}
-
-Closure *cell_car_closure(Cell *c) {
-	assert(c->car_type == cell_closure);
-	return c->car.closure;
+    assert(c->car_type == cell_cell);
+    return c->car.cell;
 }
 
 /* ... and the unusual cell_cleave(), which undoes a cons: it mutates
@@ -274,10 +267,11 @@ Cell *cell_cleaveM(Cell *c) {
 }
 
 Cell *cell_cdr(Cell *c) {
-	assert(c->cdr_type == cell_cell);
-	return c->cdr.cell;
+    assert(c->cdr_type == cell_cell);
+    return c->cdr.cell;
 }
 
+#if 0
 Cell *cell_cadr(Cell *c) { return cell_car(cell_cdr(c)); }
 Cell *cell_cddr(Cell *c) { return cell_cdr(cell_cdr(c)); }
 Cell *cell_cadar(Cell *c) { return cell_car(cell_cdr(cell_car(c))); }

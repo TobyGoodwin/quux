@@ -31,9 +31,9 @@ extern void cell_car_set_fxnum(Cell *, long);
 extern void cell_car_set_string(Cell *, char *);
 
 /* accessors */
-extern Cell *cell_nullp(Cell *);
-extern Cell *cell_pairp(Cell *);
-extern Cell *cell_atomp(Cell *);
+extern int cell_nullp(Cell *);
+extern int cell_pairp(Cell *);
+extern int cell_atomp(Cell *);
 extern Cell *cell_cellp(Cell *);
 extern int cell_numberp(Cell *);
 extern Cell *cell_fxnump(Cell *);
