@@ -222,7 +222,6 @@ Cell *cell_car(Cell *c) {
     return cell;
 }
 
-#if 0
 /* ... and so we provide additional accessors for when the result type
  * is known.
  */
@@ -231,7 +230,6 @@ long cell_car_fxnum(Cell *c) {
     assert(cell_fxnump(c));
     return c->car.fxnum;
 }
-#endif
 
 char *cell_car_string(Cell *c) {
     assert(c->car_type == cell_string);
@@ -577,6 +575,7 @@ void list_appendM(Cell *a, Cell *b) {
 	a = cell_cdr(a);
     cell_cdr_set(a, b);
 }
+#endif
 
 Cell *list_headedP(Cell *c, char *h) {
     if (!cell_nullp(c) && cell_pairp(c) && cell_stringp(c) &&
@@ -585,6 +584,7 @@ Cell *list_headedP(Cell *c, char *h) {
     return cell_nil;
 }
 
+#if 0
 /* list_reverse() builds a new list, and - while it is O(n) in time - is
  * therefore somewhat inefficient. We could make a much quicker
  * destructive reverse using cell_cleave()...
@@ -609,3 +609,58 @@ Cell *list_singletonP(Cell *c) {
     return cell_nil;
 }
 #endif
+
+int *cell_print(FILE *s, Cell *c) {
+    int atom = cell_atomp(c);
+
+    Cell *next = cell_nil;
+    if (!atom) fprintf(s, "(");
+    for (; !cell_nullp(c); c = next) {
+	Cell *car;
+	/* Nasty hack. This function cannot print circular lists. In
+	 * general, these occur only within closures, so punt on
+	 * printing them. XXX make it print all but the environment
+	 * part. */
+	if (list_headedP(c, "closure")) {
+	    //fmtprint(f, "-closure %O-", cell_cadadr(c));
+	    fprintf(s, "-closure-");
+	    break;
+	}
+	car = cell_car(c);
+	if (cell_atomp(car)) {
+	    if (cell_nullp(car))
+		fprintf(s, "()");
+	    else if (cell_fxnump(c))
+		fprintf(s, "%d", cell_car_fxnum(c));
+	    else if (cell_stringp(c))
+		fprintf(s, "%s", cell_car_string(c));
+	    else
+		fprintf(s, "[unknown]");
+	} else {
+	    cell_print(s, car);
+	}
+	if (cell_atomp(c))
+	    next = cell_nil;
+	else
+	    next = cell_cdr(c);
+	if (!cell_nullp(next)) {
+	    if (cell_pairp(next))
+		fprintf(s, " ");
+	    else
+		fprintf(s, " . ");
+	}
+    }
+    if (!atom) fprintf(s, ")");
+
+    return 0;
+}
+
+char *cell_asprint(Cell *c) {
+    char *buf;
+    size_t size;
+    FILE *s = open_memstream(&buf, &size);
+    cell_print(s, c);
+    fclose(s);
+
+    return buf;
+}

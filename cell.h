@@ -87,4 +87,6 @@ extern void list_appendM(Cell *, Cell *);
 
 extern Cell *list_reverse(Cell *);
 
+int cell_fprint(FILE *, Cell *);
+char *cell_asprint(Cell *);
 #endif

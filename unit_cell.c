@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "cell.h"
 #include "streq.h"
@@ -36,6 +37,15 @@ void test2(void) {
     check(cell_pairp(c0));
     check(cell_atomp(c1));
 
+    s = cell_asprint(c1);
+    printf("c1 is %s\n", s);
+    check(streq(s, "foo"));
+    free(s);
+
+    s = cell_asprint(c0);
+    printf("c0 is %s\n", s);
+    check(streq(s, "(bar)"));
+    free(s);
 #if 0
     s = str("%O", c1);
     print("%s\n", s);
