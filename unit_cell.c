@@ -91,29 +91,26 @@ void test3(void) {
     check(streq(cell_car_string(cell_car(c1)), "foo"));
 }
 
-#if 0
 /* construct the flat list (foo bar baz qux) */
 Cell *fbbq(void) {
-	Ref(Cell *, c3, cell_nil);
-	Ref(Cell *, c0, cell_cons_string("qux", cell_nil));
-	Ref(Cell *, c1, cell_cons_string("baz", c0));
-	Ref(Cell *, c2, cell_cons_string("bar", c1));
-	c3 = cell_cons_string("foo", c2);
-	RefEnd3(c2, c1, c0);
-	RefReturn(c3);
+    Cell *c3 = cell_nil;
+    Cell *c0 = cell_cons_string("qux", cell_nil);
+    Cell *c1 = cell_cons_string("baz", c0);
+    Cell *c2 = cell_cons_string("bar", c1);
+    c3 = cell_cons_string("foo", c2);
+    return c3;
 }
 
 void test4(void) {
-	Ref(Cell *, c, fbbq());
+    Cell *c = fbbq();
 
-	gc();
-
-	Ref(char *, s, str("%M", c, " "));
-	assert(streq(s, "foo bar baz qux"));
-	RefEnd2(s, c);
-
+    char *s = cell_asprint_flat(c, " ");
+    printf("s is %s\n", s);
+    check(streq(s, "foo bar baz qux"));
+    free(s);
 }
 
+#if 0
 void test5(void) {
 	char *s;
 	Ref(Cell *, c0, cell_cons_string("qux", cell_nil));
@@ -218,8 +215,10 @@ void test9(void) {
 #endif
 
 void unit_cell(void) {
-    printf("1..10\n");
+    printf("1..18\n");
     test0();
     test1();
     test2();
+    test3();
+    test4();
 }

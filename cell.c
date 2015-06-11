@@ -610,11 +610,11 @@ Cell *list_singletonP(Cell *c) {
 }
 #endif
 
-int *cell_print(FILE *s, Cell *c) {
+int cell_fprint(FILE *f, Cell *c) {
     int atom = cell_atomp(c);
 
     Cell *next = cell_nil;
-    if (!atom) fprintf(s, "(");
+    if (!atom) fprintf(f, "(");
     for (; !cell_nullp(c); c = next) {
 	Cell *car;
 	/* Nasty hack. This function cannot print circular lists. In
@@ -623,21 +623,21 @@ int *cell_print(FILE *s, Cell *c) {
 	 * part. */
 	if (list_headedP(c, "closure")) {
 	    //fmtprint(f, "-closure %O-", cell_cadadr(c));
-	    fprintf(s, "-closure-");
+	    fprintf(f, "-closure-");
 	    break;
 	}
 	car = cell_car(c);
 	if (cell_atomp(car)) {
 	    if (cell_nullp(car))
-		fprintf(s, "()");
+		fprintf(f, "()");
 	    else if (cell_fxnump(c))
-		fprintf(s, "%d", cell_car_fxnum(c));
+		fprintf(f, "%d", cell_car_fxnum(c));
 	    else if (cell_stringp(c))
-		fprintf(s, "%s", cell_car_string(c));
+		fprintf(f, "%s", cell_car_string(c));
 	    else
-		fprintf(s, "[unknown]");
+		fprintf(f, "[unknown]");
 	} else {
-	    cell_print(s, car);
+	    cell_fprint(f, car);
 	}
 	if (cell_atomp(c))
 	    next = cell_nil;
@@ -645,21 +645,44 @@ int *cell_print(FILE *s, Cell *c) {
 	    next = cell_cdr(c);
 	if (!cell_nullp(next)) {
 	    if (cell_pairp(next))
-		fprintf(s, " ");
+		fprintf(f, " ");
 	    else
-		fprintf(s, " . ");
+		fprintf(f, " . ");
 	}
     }
-    if (!atom) fprintf(s, ")");
+    if (!atom) fprintf(f, ")");
 
     return 0;
 }
 
+/* XXX this isn't a completely crazy way to do it, but it has the snag that we
+ * end up with a string allocated by malloc(). We could, and perhaps should,
+ * copy it into a gc-allocated string. But in the long run it should be
+ * reimplemented without the stream abstraction. */
 char *cell_asprint(Cell *c) {
     char *buf;
     size_t size;
     FILE *s = open_memstream(&buf, &size);
-    cell_print(s, c);
+    cell_fprint(s, c);
+    fclose(s);
+
+    return buf;
+}
+
+int cell_fprint_flat(FILE *f, Cell *c, char *sep) {
+    Cell *next;
+
+    for (; c; c = next) {
+        next = cell_cdr(c);
+        fprintf(f, "%s%s", cell_car_string(c), next ? sep : "");
+    }
+}
+
+char *cell_asprint_flat(Cell *c, char *sep) {
+    char *buf;
+    size_t size;
+    FILE *s = open_memstream(&buf, &size);
+    cell_fprint_flat(s, c, sep);
     fclose(s);
 
     return buf;

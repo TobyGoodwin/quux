@@ -89,4 +89,6 @@ extern Cell *list_reverse(Cell *);
 
 int cell_fprint(FILE *, Cell *);
 char *cell_asprint(Cell *);
+int cell_fprint_flat(FILE *, Cell *, char *);
+char *cell_asprint_flat(Cell *, char *);
 #endif
