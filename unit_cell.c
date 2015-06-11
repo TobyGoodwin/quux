@@ -40,12 +40,10 @@ void test2(void) {
     s = cell_asprint(c1);
     printf("c1 is %s\n", s);
     check(streq(s, "foo"));
-    free(s);
 
     s = cell_asprint(c0);
     printf("c0 is %s\n", s);
     check(streq(s, "(bar)"));
-    free(s);
 #if 0
     s = str("%O", c1);
     print("%s\n", s);
@@ -107,7 +105,6 @@ void test4(void) {
     char *s = cell_asprint_flat(c, " ");
     printf("s is %s\n", s);
     check(streq(s, "foo bar baz qux"));
-    free(s);
 }
 
 void test5(void) {
@@ -123,7 +120,6 @@ void test5(void) {
     s = cell_asprint(c1);
     printf("%s\n", s);
     check(streq(s, "(baz qux)"));
-    free(s);
 
     s = cell_asprint(c4);
     printf("%s\n", s);

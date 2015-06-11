@@ -1,0 +1,56 @@
+{
+#include "syntax.h"
+}
+
+Es :: Cell * ← __ f:Form __ Semi? __ e:Es → { make_sequence(f, e) }
+             / __ f:Form __ → f
+
+Form ← Defn
+     / Command
+
+Defn ← ws:Words Equals l:List → { make_define(ws, l) }
+
+Body ← f:Form b:Body → { make_sequence(f, b) }
+     / Form
+
+Command ← i:Item l:List → { make_command(i, l) }
+
+List ← i:Item $ l:List → { cell_cons(i, l) }
+     / ε → cell_nil
+
+ListNl ← __ i:Item __ l:ListNl → { cell_cons(i, l) }
+       / __ → cell_nil
+
+Item ← Atom
+     / Molecule
+     
+Atom ← Dollar w:Word → w
+     / w:Word → { prefixplus("quote", w) }
+
+Molecule ← LPar $ l:ListNl $ RPar → { cell_cons_string("list", l) }
+         / Dollar i:Item → { make_eval(i) }
+         / LBrace e:Es RBrace → { make_lambda(cell_nil, e) }
+         / "if":LexWord i:Item j:Item k:Item -> { make_if(i, j, k) }
+
+Words ← w:Word ws:Words → { cell_cons(w, ws) }
+      / w:Word → { cell_cons(w, cell_nil) }
+
+Word ← w:LexWord → { cell_new_string(gcdup(w)) }
+
+LexWord :: char * ← w:[-0-9A-Za-z%,./:?]+ _ → { ref_dup(w) }
+
+Comment :: void ← "#" [^\n]* "\n"
+
+# horizontal whitespace
+_ ← [ \t]*
+
+# any whitespace
+__ ← ( [ \t\n] / Comment )*
+
+LBrace ← "{" _
+RBrace ← "}" _
+Dollar ← "$" _
+Equals ← "=" _
+LPar ← "(" _
+RPar ← ")" _
+Semi ← ";" _

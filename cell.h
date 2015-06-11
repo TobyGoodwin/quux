@@ -2,6 +2,7 @@
 #define CELL_H 1
 
 #include <stddef.h>
+#include <stdio.h>
 
 typedef struct Cell Cell;
 

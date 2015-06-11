@@ -20,6 +20,7 @@
 #include <assert.h>
 #include <gc.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "cell.h"
@@ -140,7 +141,6 @@ Cell *cell_cons(Cell *car, Cell *cdr) {
     return c;
 }
 
-#if 0
 /* mutators */
 void cell_car_set(Cell *c, Cell *a) {
     c->car_type = cell_cell;
@@ -161,13 +161,6 @@ void cell_car_set_string(Cell *c, char *a) {
 	c->car_type = cell_string;
 	c->car.string = a;
 }
-
-void cell_car_set_closure(Cell *c, Closure *a) {
-	c->car_type = cell_closure;
-	c->car.closure = a;
-}
-
-#endif
 
 /* accessors */
 int cell_nullp(Cell *c) {
@@ -654,13 +647,15 @@ int cell_fprint(FILE *f, Cell *c) {
  * copy it into a gc-allocated string. But in the long run it should be
  * reimplemented without the stream abstraction. */
 char *cell_asprint(Cell *c) {
-    char *buf;
+    char *buf, *gcbuf;
     size_t size;
     FILE *s = open_memstream(&buf, &size);
     cell_fprint(s, c);
     fclose(s);
-
-    return buf;
+    gcbuf = GC_MALLOC(size + 1);
+    memcpy(gcbuf, buf, size + 1);
+    free(buf);
+    return gcbuf;
 }
 
 int cell_fprint_flat(FILE *f, Cell *c, char *sep) {
