@@ -30,15 +30,16 @@ extern void cell_cdr_set(Cell *, Cell *);
 extern void cell_car_set_fxnum(Cell *, long);
 extern void cell_car_set_string(Cell *, char *);
 
+/* predicates */
+int cell_nullp(Cell *);
+int cell_pairp(Cell *);
+int cell_atomp(Cell *);
+int cell_cellp(Cell *);
+int cell_numberp(Cell *);
+int cell_fxnump(Cell *);
+int cell_stringp(Cell *);
+
 /* accessors */
-extern int cell_nullp(Cell *);
-extern int cell_pairp(Cell *);
-extern int cell_atomp(Cell *);
-extern Cell *cell_cellp(Cell *);
-extern int cell_numberp(Cell *);
-extern Cell *cell_fxnump(Cell *);
-extern int cell_stringp(Cell *);
-extern int cell_closurep(Cell *);
 extern Cell *cell_car(Cell *);
 extern char *cell_car_string(Cell *);
 extern long cell_car_fxnum(Cell *);

@@ -38,7 +38,7 @@
 
 enum cell_type {
 	cell_atom, cell_cell,
-	cell_fxnum, cell_string, cell_closure,
+	cell_fxnum, cell_string,
 	cell_invalid
 };
 
@@ -183,24 +183,16 @@ int cell_pairp(Cell *c) {
     return !cell_atomp(c);
 }
 
-Cell *cell_cellp(Cell *c) {
-    if (c->car_type == cell_cell)
-	return cell_true;
-    return cell_nil;
+int cell_cellp(Cell *c) {
+    return c->car_type == cell_cell;
 }
 
-Cell *cell_fxnump(Cell *c) {
-    if (c->car_type == cell_fxnum)
-	return cell_true;
-    return cell_nil;
+int cell_fxnump(Cell *c) {
+    return c->car_type == cell_fxnum;
 }
 
 int cell_stringp(Cell *c) {
-	return c->car_type == cell_string;
-}
-
-int cell_closurep(Cell *c) {
-	return c->car_type == cell_closure;
+    return c->car_type == cell_string;
 }
 
 /* Because types are not completely boxed, car may need to allocate a
@@ -554,20 +546,22 @@ int list_length(Cell *c) {
 	++r;
     return r;
 }
+#endif
 
 /* non-mutating append */
-Cell *list_append(Cell *a0, Cell *b0) {
-    if (cell_nullp(a0)) return b0;
-    Ref(Cell *, r, cell_nil);
-    Ref(Cell *, a, a0);
-    Ref(Cell *, b, b0);
+Cell *list_append(Cell *a, Cell *b) {
+    Cell *r = cell_nil;
+    Cell *c;
+
+    if (cell_nullp(a)) return b;
+
     /* XXX: these atom tests seem pretty grody */
-    Ref(Cell *, c, cell_atomp(a) ? a : cell_car(a));
+    c = cell_atomp(a) ? a : cell_car(a);
     r = cell_consM(c, list_append(cell_atomp(a) ? cell_nil : cell_cdr(a), b));
-    RefEnd3(c, b, a);
-    RefReturn(r);
+    return r;
 }
 
+#if 0
 /* mutating append */
 void list_appendM(Cell *a, Cell *b) {
     assert(a); /* can't mutate ()! */
