@@ -11,7 +11,7 @@ quux_SOURCES = \
     input.c \
     main.c \
     parse.c \
-    syntax.c
+    syn.c
 
 check_PROGRAMS = \
     unit_cell

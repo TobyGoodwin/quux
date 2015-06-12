@@ -13,7 +13,7 @@ Cell *parse(void) {
     fprintf(stderr, "parse() returns %d\n", r);
     if (r) {
         result = pacc_result(pp);
-        fprintf(stderr, "==> %O\n", cell_asprint(result));
+        fprintf(stderr, "==> %s\n", cell_asprint(result));
         return result;
     }
     return 0;
