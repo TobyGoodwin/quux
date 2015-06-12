@@ -1,3 +1,4 @@
+#include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -181,7 +182,7 @@ void test9(void) {
 }
 
 /* XXX there are a lot more cell functions to test */
-void unit_cell(void) {
+int main(void) {
     printf("1..27\n");
     test0();
     test1();

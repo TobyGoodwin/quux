@@ -25,7 +25,7 @@ Item ← Atom
      / Molecule
      
 Atom ← Dollar w:Word → w
-     / w:Word → { prefixplus("quote", w) }
+     / w:Word → { prefix("quote", w) }
 
 Molecule ← LPar $ l:ListNl $ RPar → { cell_cons_string("list", l) }
          / Dollar i:Item → { make_eval(i) }
@@ -35,9 +35,9 @@ Molecule ← LPar $ l:ListNl $ RPar → { cell_cons_string("list", l) }
 Words ← w:Word ws:Words → { cell_cons(w, ws) }
       / w:Word → { cell_cons(w, cell_nil) }
 
-Word ← w:LexWord → { cell_new_string(gcdup(w)) }
+Word ← w:LexWord → { cell_new_string(ref_dup(w)) }
 
-LexWord :: char * ← w:[-0-9A-Za-z%,./:?]+ _ → { ref_dup(w) }
+LexWord :: ref_t ← w:[-0-9A-Za-z%,./:?]+ _ → w
 
 Comment :: void ← "#" [^\n]* "\n"
 

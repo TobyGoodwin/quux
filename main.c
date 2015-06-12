@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-#include "unit_cell.h"
+#include "input.h"
 
 int main(void) {
-    unit_cell();
+    parse();
     return 0;
 }
