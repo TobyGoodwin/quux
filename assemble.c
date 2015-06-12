@@ -2,10 +2,11 @@
 
 #include "assemble.h"
 #include "cell.h"
+#include "env.h"
 #include "streq.h"
 #include "vm.h"
 
-#define AsTrace if (0)
+#define AsTrace if (1)
 
 /* XXX - sling? */
 static byte byte_code[600];
@@ -22,37 +23,34 @@ static int reg_code(char *reg) {
     assert(0);
 }
 
+Cell *labels;
+
 byte *assemble(Cell *code) {
-    Cell *c = cell_nil;
-    Dict *labels = mkdict();
-    Cell *labels2 = cell_nil;
+    Cell *c;
+    Cell *cl;
+    Cell *slots = cell_nil;
     unsigned int ip;
 
 //fprint(2, "assemble(): code is >%O<\n", code);
 
+    labels = cell_nil;
     /* the first two bytes will hold the address of the "end" label */
-    Ref(Cell *, cl, cell_cons(cell_new_fxnum(0), cell_nil));
+    cl = cell_cons(cell_new_fxnum(0), cell_nil);
     cl = cell_cons_string("end", cl);
-    labels2 = cell_cons(cl, labels2);
-    RefEnd(cl);
+    slots = cell_cons(cl, slots);
     ip = 2;
 
     for (c = code; !cell_nullp(c); c = cell_cdr(c)) {
-	Ref(Cell *, line, cell_car(c));
-	AsTrace fprint(2, "assemble(): considering >%O<\n", line);
+	Cell *line = cell_car(c);
+	AsTrace fprintf(stderr, "assemble(): considering >%s<\n",
+                cell_asprint(line));
 	if (cell_atomp(line)) {
-	    Ref(char *, lab, cell_car_string(line));
-	    AsTrace fprint(2, "got label >%s<\n", lab);
-	    /* XXX: we need to record the current value of the
-	     * instruction pointer, which is of type int. Our
-	     * dictionaries can only store values of type void *. For
-	     * now, just assume that they are compatible types. In the
-	     * future, this needs to be tidied up. */
-	    labels = dictput(labels, lab, ip);
-	    RefEnd(lab);
+            /* it's a label: record current ip in labels */
+            Cell *entry = cell_cons(line, cell_new_fxnum(ip));
+            labels = cell_cons(entry, labels);
 	} else {
-	    Ref(char *, ins, cell_car_string(line));
-	    AsTrace fprint(2, "got instruction >%s<\n", ins);
+	    char *ins = cell_car_string(line);
+	    AsTrace fprintf(stderr, "got instruction >%s<\n", ins);
 	    if (streq(ins, "move")) {
 		int src = reg_code(cell_car_string(cell_cdr(line)));
 		int dst = reg_code(cell_car_string(cell_cdr(cell_cdr(line))));
@@ -67,69 +65,88 @@ byte *assemble(Cell *code) {
 		int dst = reg_code(cell_car_string(cell_cdr(line)));
 		byte_code[ip++] = vm_pop | dst;
 	    } else if (streq(ins, "call")) {
-		int fun = vm_encode_call(cell_car_string(cell_cdr(line)));
+		int fun = 7; //vm_encode_call(cell_car_string(cell_cdr(line)));
 		byte_code[ip++] = vm_call;
 		byte_code[ip++] = fun;
 	    } else if (streq(ins, "cons")) {
 		byte_code[ip++] = vm_cons;
 	    } else if (streq(ins, "jump") || streq(ins, "branch") ||
 		    streq(ins, "loadcont")) {
-		Ref(char *, l, cell_car_string(cell_cdr(line)));
-		void *tgt = dictget(labels, l);
-		AsTrace fprint(2, "jump/branch/loadcont to label >%s<\n", l);
+		char *l = cell_car_string(cell_cdr(line));
+		Cell *tgt = cell_assoc(cell_cdr(line), labels);
+		AsTrace fprintf(stderr,
+                        "cell_assoc returned >%s<\n", cell_asprint(tgt));
+		AsTrace fprintf(stderr,
+                        "jump/branch/loadcont to label >%s<\n", l);
 		if (streq(ins, "jump"))
 		    byte_code[ip++] = vm_jump;
 		else if (streq(ins, "branch"))
 		    byte_code[ip++] = vm_branch;
 		else
 		    byte_code[ip++] = vm_loadcont;
-		if (tgt) {
+		if (cell_fxnump(tgt)) {
 		    /* we already know the value of this label, so we
 		     * can simply insert it on this pass */
-		    int t = tgt; /* XXX: see above */
+		    long t = cell_car_fxnum(tgt);
 		    byte_code[ip++] = (t & 0xff00) >> 8;
 		    byte_code[ip++] = t & 0xff;
 		} else {
 		    /* record the fact that we need to fill in the value
 		     * of this label on the second pass */
-		    Ref(Cell *, cl, cell_cons(cell_new_fxnum(ip), cell_nil));
+		    Cell *cl = cell_cons(cell_new_fxnum(ip), cell_nil);
 		    cl = cell_cons_string(l, cl);
-		    labels2 = cell_cons(cl, labels2);
-		    AsTrace fprint(2, "labels2 is now >%O<\n", labels2);
-		    RefEnd(cl);
+		    slots = cell_cons(cl, slots);
+		    AsTrace fprintf(stderr, "slots is now >%s<\n",
+                            cell_asprint(slots));
 		    byte_code[ip++] = 0;
 		    byte_code[ip++] = 0;
 		}
-		RefEnd(l);
 	    } else if (streq(ins, "continue")) {
 		byte_code[ip++] = vm_continue;
 	    } else {
 		assert(0);
 	    }
-	    RefEnd(ins);
 	}
-	RefEnd(line);
     }
     byte_code[ip] = vm_end;
 
     /* assembler second pass: complete forward jump and branch
      * instructions
      */
-    for (c = labels2; !cell_nullp(c); c = cell_cdr(c)) {
-	Ref(Cell *, l, cell_car(c));
-	Ref(char *, lab, cell_car_string(l));
+    for (c = slots; !cell_nullp(c); c = cell_cdr(c)) {
+	Cell *l = cell_car(c);
+	char *lab = cell_car_string(l);
 	int where = cell_car_fxnum(cell_cdr(l));
-	void *tgt = dictget(labels, lab);
-	AsTrace fprint(2, "fixing jump at %d, target is %s (%d)\n",
-		    where, lab, tgt);
-	if (tgt) {
-	    int t = tgt; /* XXX: see above */
-	    byte_code[where] = (t & 0xff00) >> 8;
-	    byte_code[where + 1] = t & 0xff;
-	} else
-	    assert(0);
-	RefEnd2(lab, l);
+	void *tgt = cell_assoc(cell_car(l), labels);
+	AsTrace fprintf(stderr, "fixing jump at %d, target is %s (%s)\n",
+		    where, lab, cell_asprint(tgt));
+        assert(!cell_nullp(tgt));
+        assert(cell_fxnump(tgt));
+        int t = cell_car_fxnum(tgt);
+        byte_code[where] = (t & 0xff00) >> 8;
+        byte_code[where + 1] = t & 0xff;
     }
-    RefEnd4(labels2, labels, c, code);
     return byte_code;
+}
+
+/* cell_to_vmc() handles parse trees that are (nested) lists, removing
+ * "%list", "%glob", and "%quote" annotations, and building the result we
+ * would get if we had the (Schemely) cell_read().
+ */
+Cell *cell_to_vmc(Cell *c) {
+    Cell *result;
+    if (cell_nullp(c)) return cell_nil;
+    if (list_headedP(c, "list"))
+        c = cell_cdr(c);
+    if (list_headedP(c, "glob")) {
+	result = cell_cadadr(c);
+    } else if (list_headedP(c, "quote")) {
+	result = cell_cadr(c);
+    } else if (cell_pairp(c)) {
+	Cell *l = cell_to_vmc(cell_car(c));
+	Cell *r = cell_to_vmc(cell_cdr(c));
+	result = cell_cons(l, r);
+    } else 
+	 result = c;
+    return result;
 }

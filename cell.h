@@ -70,7 +70,6 @@ extern size_t _cell_size(void);
 /* temporaries for changeover */
 //extern List *cell_to_list(Cell *);
 //extern Cell *cell_from_list(List *);
-extern Cell *cell_to_vmc(Cell *);
 //extern Cell *cell_from_tree(Tree *);
 
 /* Cells as lists */
@@ -86,6 +85,8 @@ extern Cell *list_append(Cell *, Cell *);
 
 /* mutating append */
 extern void list_appendM(Cell *, Cell *);
+
+Cell *cell_assoc(Cell *, Cell *);
 
 extern Cell *list_reverse(Cell *);
 

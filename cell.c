@@ -180,15 +180,15 @@ int cell_pairp(Cell *c) {
 }
 
 int cell_cellp(Cell *c) {
-    return c->car_type == cell_cell;
+    return c && c->car_type == cell_cell;
 }
 
 int cell_fxnump(Cell *c) {
-    return c->car_type == cell_fxnum;
+    return c && c->car_type == cell_fxnum;
 }
 
 int cell_stringp(Cell *c) {
-    return c->car_type == cell_string;
+    return c && c->car_type == cell_string;
 }
 
 /* Because types are not completely boxed, car may need to allocate a
@@ -257,8 +257,9 @@ Cell *cell_cdr(Cell *c) {
     return c->cdr.cell;
 }
 
-#if 0
+Cell *cell_caar(Cell *c) { return cell_car(cell_car(c)); }
 Cell *cell_cadr(Cell *c) { return cell_car(cell_cdr(c)); }
+Cell *cell_cdar(Cell *c) { return cell_cdr(cell_car(c)); }
 Cell *cell_cddr(Cell *c) { return cell_cdr(cell_cdr(c)); }
 Cell *cell_cadar(Cell *c) { return cell_car(cell_cdr(cell_car(c))); }
 Cell *cell_caddr(Cell *c) { return cell_car(cell_cddr(c)); }
@@ -266,6 +267,7 @@ Cell *cell_cdadr(Cell *c) { return cell_cdr(cell_cadr(c)); }
 Cell *cell_cadadr(Cell *c) { return cell_car(cell_cdadr(c)); }
 Cell *cell_cadddr(Cell *c) { return cell_car(cell_cdr(cell_cddr(c))); }
 
+#if 0
 Cell *cell_caadr(Cell *c0) {
     Ref(Cell *, c, cell_cdr(c0));
     c = cell_car(c);
@@ -382,31 +384,6 @@ fprint(2, "queue_from_tree(): r is >%O<\n", r);
     RefReturn(q);
 }
 #endif
-
-/* cell_to_vmc() handles parse trees that are (nested) lists, removing
- * "%list", "%glob", and "%quote" annotations, and building the result we
- * would get if we had the (Schemely) cell_read().
- */
-Cell *cell_to_vmc(Cell *c0) {
-    Cell *result;
-    if (!c0) return cell_nil;
-    Ref(Cell *, c, c0);
-    if (list_headedP(c, "list"))
-	    c = cell_cdr(c);
-    if (list_headedP(c, "glob")) {
-	result = cell_cadadr(c);
-    } else if (list_headedP(c, "quote")) {
-	result = cell_cadr(c);
-    } else if (cell_pairp(c)) {
-	Ref(Cell *, l, cell_to_vmc(cell_car(c)));
-	Ref(Cell *, r, cell_to_vmc(cell_cdr(c)));
-	result = cell_cons(l, r);
-	RefEnd2(r, l);
-    } else 
-	 result = c;
-    RefEnd(c);
-    return result;
-}
 
 Cell *cell_from_tree_list(Tree *);
 
@@ -566,6 +543,14 @@ void list_appendM(Cell *a, Cell *b) {
     cell_cdr_set(a, b);
 }
 #endif
+
+Cell *cell_assoc(Cell *k, Cell *l) {
+    if (cell_nullp(l))
+        return cell_nil;
+    if (streq(cell_car_string(k), cell_car_string(cell_car(l))))
+        return cell_cdar(l);
+    return cell_assoc(k, cell_cdr(l));
+}
 
 Cell *list_headedP(Cell *c, char *h) {
     if (!cell_nullp(c) && cell_pairp(c) && cell_stringp(c) &&

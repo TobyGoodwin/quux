@@ -8,13 +8,11 @@ feed.c: parse.c
 quux_SOURCES = \
     assemble.c \
     cell.c \
-    env.c \
     feed.c \
     input.c \
     main.c \
     parse.c \
-    syn.c \
-    vm.c
+    syn.c 
 
 check_PROGRAMS = \
     unit_cell
