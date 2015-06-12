@@ -6,12 +6,15 @@ parse.h: parse.c
 feed.c: parse.c
 
 quux_SOURCES = \
+    assemble.c \
     cell.c \
+    env.c \
     feed.c \
     input.c \
     main.c \
     parse.c \
-    syn.c
+    syn.c \
+    vm.c
 
 check_PROGRAMS = \
     unit_cell
