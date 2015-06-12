@@ -1,0 +1,284 @@
+vmc = (
+eval-dispatch
+    (call atom?) (branch eval-atom)
+    #(call list?) (branch evlis)
+    (call quote?) (branch eval-quote)
+    (call define?) (branch eval-define)
+    (call lambdap) (branch ev-lambda)
+    (call internal?) (branch self-evaluating)
+    (call sequence?) (branch ev-sequence)
+    (call if?) (branch eval-if)
+    (call apply?) (branch apply-apply)
+    # must be an application
+    (jump ev-apply)
+eval-atom
+    (call null?) (branch self-evaluating)
+    (call number?) (branch self-evaluating)
+    (call eq-%echo?) (branch self-evaluating) # XXX
+    # must be a variable name (we don't have symbols (yet))
+    (jump eval-lookup)
+self-evaluating
+    (move exp val)
+    (continue)
+evlis
+    # (list first second)
+    (push cont) (push unev) (push argl)
+    # get the sequence, we will pop it into unev in a moment
+    (call cdr) (push val)
+    # XXX can we get rid of this?
+    (push env)
+evlis-loop
+    (pop env) (pop unev)
+    (move unev exp)
+    (call last?) (branch eval-sequence-last)
+    # shift unev and get the first element into exp
+    (move unev exp) (call cdr) (move val unev)
+    (call car) (move val exp)
+    (push unev) (push env)
+    (loadcont eval-sequence-loop) (jump eval-dispatch)
+eval-sequence-last
+    # restore original unev and cont
+    (pop unev) (pop cont)
+    (call car) (move val exp)
+    # jump straight to eval-dispatch: this implements proper
+    # tail-recursion (for the sequence case)
+    (jump eval-dispatch)
+
+    (continue)
+eval-quote
+    # (quote foo) => foo
+    (call cadr)
+    (continue)
+eval-lookup
+    # lookup a name
+    #(call cadr) (move val exp)
+    #(push cont) (loadcont ev-lookup1)
+    #(jump eval-dispatch)
+ev-lookup1
+    #(pop cont)
+    #(move val exp)
+    (call lookup)
+    (branch ev-lookup4)
+    # no binding? (lookup qux) ==> (apply (lookup path-search) qux)
+    # note that we must check that qux is not already path-search!
+    (call eq-%path-search?) (branch fail)
+    (call make-path-search) (move val exp)
+    (push cont) (loadcont ev-lookup2) (push argl)
+    (jump eval-dispatch)
+ev-lookup2
+    (pop argl) (pop cont)
+    # if pathsearch returned nil, fail
+    (branch ev-lookup3) (jump fail)
+ev-lookup3
+    # otherwise, we have something like /usr/bin/qux
+    (move val exp)
+    # create (external /usr/bin/qux)
+    (call make-prim-ext) (move val exp)
+    (continue)
+ev-lookup4
+    # remove the extra level of listage returned by lookup
+    # XXX should use a mutating car here
+    (move val exp) (call car)
+    (continue)
+eval-define
+    # (define x whatever)
+    # note that the name is not evaled
+    (call cadr) (push val)
+    (call caddr) (move val exp)
+    # need to save current env!
+    (push env) (push cont) (loadcont eval-define-value)
+    (jump eval-dispatch)
+eval-define-value
+    (pop cont) (pop env)
+    (push val)
+    (move env exp) (nil exp2) (cons)
+    (move val exp2) (pop exp) (cons)
+    (move val exp2) (pop exp) (cons)
+    (move val exp) (call bind)
+    (continue)
+ev-lambda
+    # produces (closure exp env)
+    (call cdr)
+    (move val exp2)
+    (push val)
+    (move env exp) (nil exp2) (cons)
+    (pop exp) (move val exp2) (cons)
+    (move val exp2)
+    (call const-closure) (move val exp)
+    (cons)
+    (continue)
+ev-sequence
+    # (sequence first second)
+    (push cont) (push unev)
+    # get the sequence, we will pop it into unev in a moment
+    (call cdr) (push val)
+    # XXX can we get rid of this?
+    (push env)
+eval-sequence-loop
+    (pop env) (pop unev)
+    (move unev exp)
+    (call last?) (branch eval-sequence-last)
+    # shift unev and get the first element into exp
+    (move unev exp) (call cdr) (move val unev)
+    (call car) (move val exp)
+    (push unev) (push env)
+    (loadcont eval-sequence-loop) (jump eval-dispatch)
+eval-sequence-last
+    # restore original unev and cont
+    (pop unev) (pop cont)
+    (call car) (move val exp)
+    # jump straight to eval-dispatch: this implements proper
+    # tail-recursion (for the sequence case)
+    (jump eval-dispatch)
+eval-if
+    # (if test then else)
+    (push cont) (push env)
+    # save the two branches in unev
+    (call cddr) (move val unev) (push unev)
+    # get the test and evaluate it
+    (call cadr) (move val exp)
+    (loadcont eval-if-branch)
+    (jump eval-dispatch)
+eval-if-branch
+    (pop unev) (pop env)
+    (move unev exp)
+    (branch eval-if-then)
+    # test failed
+    (call cdr) (move val exp)
+eval-if-then
+    # test succeeded
+    (call car)
+eval-if-final
+    (move val exp)
+    (pop cont)
+    (jump eval-dispatch)
+apply-apply
+    # (apply fun args)
+    (call cddr) (move val exp2)
+    (call cadr) (move val exp)
+    (cons)
+ev-apply
+    # (operator operands)
+    # save the args in unev
+    (call cdr) (move val unev)
+    (branch ev-apply-args)
+    # no args case: evaluate the operator
+    (call car) (move val exp)
+    (push cont) (loadcont setup-no-arg-apply)
+    # %cons, %eval, %list, and %lookup are "immutable hooks": they could
+    # be real hook functions, but they're so fundamental that it would
+    # be insane to override them
+    (call immutable?) (branch self-evaluating)
+    (jump eval-dispatch)
+setup-no-arg-apply
+    (pop cont) (move val fun)
+    (nil argl)
+    (jump apply-dispatch)
+ev-apply-args
+    # there are some arguments in unev
+    # evaluate the operator
+    (call car) (move val exp)
+    (push unev) (push env) (push cont)
+    (loadcont ev-apply2)
+    (call immutable?) (branch self-evaluating)
+    (jump eval-dispatch)
+ev-apply2
+    (pop cont) (pop env) (pop unev)
+    (move val fun) (push fun)
+    (nil argl)
+eval-args-loop
+    # test for last arg
+    (move unev exp) (call last?) (branch last-arg)
+    # grab the first arg from unev
+    (move unev exp) (call car) (move val exp)
+    (push argl) (push unev) (push env) (push cont)
+    (loadcont accumulate-arg) (jump eval-dispatch)
+accumulate-arg
+    (pop cont) (pop env) (pop unev) (pop argl)
+    # cons newly evaluated argument onto argl
+    (move val exp) (move argl exp2) (cons) (move val argl)
+    # next argument
+    (move unev exp) (call cdr) (move val unev)
+    (jump eval-args-loop)
+last-arg
+    (move unev exp) (call car) (move val exp)
+    # no need to save unev or env
+    (push argl) (push cont)
+    (loadcont accumulate-last-arg) (jump eval-dispatch)
+accumulate-last-arg
+    (pop cont) (pop argl)
+    # cons onto argl
+    (move val exp) (move argl exp2) (cons) (move val argl)
+    # reverse argl
+    (move argl exp) (call reverse) (move val argl)
+    (pop fun)
+apply-dispatch
+    (move fun exp)
+    (call atom?) (branch apply-atom)
+    (call internal?) (branch apply-prim)
+    (call external?) (branch apply-external)
+    (call closure?) (branch apply-closure)
+    (jump fail)
+apply-atom
+    (call eq-%cons?) (branch apply-%cons)
+    (call eq-%eval?) (branch apply-%eval)
+    (call eq-list?) (branch apply-list)
+    (call eq-%lookup?) (branch apply-%lookup)
+    (call eq-%echo?) (branch apply-%echo) # XXX temp
+    (jump fail)
+    (call null?) (branch fail)
+    # this is not at all Schemely!
+    (move fun exp)
+    (push cont) (loadcont apply-atom-redispatch)
+    (jump eval-atom)
+apply-atom-redispatch
+    (pop cont)
+    (move val fun) (jump apply-dispatch)
+apply-%cons
+    (move argl exp) (call cadr) (move val exp2)
+    (move argl exp) (call car) (move val exp)
+    (cons)
+    (continue)
+apply-%eval
+    # evaluate the car of argl (rest of argl is ignored... for now!)
+    (move argl exp) (call car) (move val exp)
+    (jump eval-dispatch)
+apply-list
+    # list is the identity function
+    (move argl val)
+    (continue)
+apply-%lookup
+    (move argl exp) (call car)
+    (jump eval-lookup)
+# XXX %echo as an immutable is just to save my head while testing
+apply-%echo
+    (call prim-apply) (continue)
+apply-prim
+    # we have (internal foo): extract the name
+    (call cadr) (move val exp)
+    # and call the prim applier
+    (call prim-apply)
+    (continue)
+apply-external
+    # (external date) => run the date command
+    (call cadr) (move val exp)
+    (move argl exp2) (cons) (move val exp)
+    (call external)
+    (continue)
+apply-closure
+    # bind the arguments: closing env...
+    (push exp) (call caddr) (move val exp)
+    (nil exp2) (cons) (move val exp2)
+    # actual parameters from argl...
+    (move argl exp) (cons) (move val exp2)
+    # formal parameters...
+    (pop exp) (push exp) (call caadr) (move val exp) (cons)
+    # create a new environment frame...
+    (move val exp) (call frame) (move val env)
+    # extract the closure body
+    (pop exp) (call cadadr) (move val exp)
+    (jump eval-dispatch)
+fail
+    (continue)
+end
+)

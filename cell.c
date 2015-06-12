@@ -1,7 +1,7 @@
 /*
  * Copyright 2015 Tobold Jayne Goodwin <toby@paccrat.org>
  *
- * This file is part of Quux.
+ * This file is part of quux.
  *
  * Quux is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
@@ -14,8 +14,11 @@
  * for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ * along with quux.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+/* XXX We need this for open_memstream (but the plan is to get rid of that) */
+#define _XOPEN_SOURCE 700
 
 #include <assert.h>
 #include <gc.h>

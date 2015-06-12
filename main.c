@@ -3,6 +3,7 @@
 #include "input.h"
 
 int main(void) {
-    parse();
+    parse_string("foo = bar; qux = baz");
+    parse_file("quux.vmc");
     return 0;
 }

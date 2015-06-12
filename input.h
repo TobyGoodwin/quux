@@ -1,4 +1,5 @@
 #include "cell.h"
 #include "parse.h"
 
-Cell *parse(void);
+Cell *parse_file(char *);
+Cell *parse_string(char *);
