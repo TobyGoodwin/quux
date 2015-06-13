@@ -11,8 +11,6 @@
  */
 
 /* modify the environment to make a new binding in the first frame */
-/* XXX why modify? would it not be better to return the new environment, so we
- * can start with cell_nil? */
 void env_bind(Cell *env, Cell *name, Cell *val) {
     Cell *frame, *names, *vals;
 
