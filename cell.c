@@ -534,7 +534,6 @@ Cell *list_append(Cell *a, Cell *b) {
     return r;
 }
 
-#if 0
 /* mutating append */
 void list_appendM(Cell *a, Cell *b) {
     assert(a); /* can't mutate ()! */
@@ -542,7 +541,6 @@ void list_appendM(Cell *a, Cell *b) {
 	a = cell_cdr(a);
     cell_cdr_set(a, b);
 }
-#endif
 
 Cell *cell_assoc(Cell *k, Cell *l) {
     if (cell_nullp(l))

@@ -15,8 +15,8 @@ int main(void) {
     quux = cell_caddr(quux); /* remove unneeded "(define vmc ...)" */
     quux = cell_to_vmc(quux);
     interp = assemble(quux);
-#if 0
     env = env_frame(cell_nil, cell_nil, cell_nil);
+#if 0
     vm_reg_set(vm_reg_env, env);
     vm_reg_set(vm_reg_exp, c);
     vm_run(interp);
