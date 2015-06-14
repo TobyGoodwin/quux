@@ -9,11 +9,14 @@ quux_SOURCES = \
     assemble.c \
     cell.c \
     env.c \
+    external.c \
     feed.c \
     input.c \
+    internal.c \
     main.c \
     parse.c \
-    syn.c 
+    syn.c \
+    vm.c
 
 check_PROGRAMS = \
     unit_cell \

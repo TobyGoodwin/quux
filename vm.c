@@ -1,8 +1,12 @@
-#include "es.h"
+#include <assert.h>
+#include <stdlib.h>
 
 #include "assemble.h"
 #include "cell.h"
 #include "env.h"
+#include "external.h"
+#include "internal.h"
+#include "streq.h"
 #include "vm.h"
 
 #define VmTrace if (1)
@@ -23,39 +27,36 @@ static Cell *sequencep(Cell *c) { return list_headedP(c, "sequence"); }
 static Cell *wordp(Cell *c) { return list_headedP(c, "word"); }
 
 static Cell *vm_gq(Cell *c) {
-    return cell_new_string(glob_quote(cell_car_string(c)));
+    //return cell_new_string(glob_quote(cell_car_string(c)));
+return 0;
 }
 
 static Cell *lookup(Cell *c) {
     return env_lookup(reg[vm_reg_env], c);
 }
 
-static Cell *bind(Cell *c0) {
-    Ref(Cell *, c, c0);
-    Ref(Cell *, n, cell_car(c));
-    Ref(Cell *, v, cell_cadr(c));
-    Ref(Cell *, e, cell_caddr(c));
-    VmTrace fprint(2, "bind(): n is %O, v is %O, e is %O\n", n, v, e);
+static Cell *bind(Cell *c) {
+    Cell *n = cell_car(c);
+    Cell *v = cell_cadr(c);
+    Cell *e = cell_caddr(c);
+    VmTrace fprintf(stderr, "bind(): n is %s, v is %s, e is %s)\n",
+            cell_asprint(n), cell_asprint(v), cell_asprint(e));
     env_bind(e, n, v);
-    RefEnd3(e, v, n);
-    RefEnd(c);
     return cell_nil;
 }
 
-static Cell *frame(Cell *c0) {
-    Ref(Cell *, c, c0);
-    Ref(Cell *, n, cell_car(c));
-    Ref(Cell *, v, cell_cadr(c));
-    Ref(Cell *, e, cell_caddr(c));
-    VmTrace fprint(2, "frame(): n is %O, v is %O, e is %O\n", n, v, e);
-    c = env_frame(e, n, v);
-    RefEnd3(e, v, n);
-    RefReturn(c);
+static Cell *frame(Cell *c) {
+    Cell *n = cell_car(c);
+    Cell *v = cell_cadr(c);
+    Cell *e = cell_caddr(c);
+    VmTrace fprintf(stderr, "frame(): n is %s, v is %s, e is %s\n",
+            cell_asprint(n), cell_asprint(v), cell_asprint(e));
+    return env_frame(e, n, v);
 }
 
 static Cell *prim_apply(Cell *c) {
-    VmTrace fprint(2, "prim_apply(): call %O%O\n", c, reg[vm_reg_argl]);
-    return primplus(cell_car_string(c), reg[vm_reg_argl], 0, 0);
+    VmTrace fprintf(stderr, "prim_apply(): call %O%O\n", c, reg[vm_reg_argl]);
+    return internal(cell_car_string(c), reg[vm_reg_argl]);
 }
 
 static Cell *eq_stringP(Cell *c, char *s) {
@@ -83,30 +84,26 @@ static Cell *eq_pcpath_searchP(Cell *c) {
     return eq_stringP(c, "%path-search");
 }
 
-static Cell *make_path_search(Cell *c0) {
+static Cell *make_path_search(Cell *c) {
     /* date ==> (%path-search (quote date)) */
     //Ref(Cell *, r, cell_nil);
-    Ref(Cell *, c, c0);
     c = cell_cons(c, cell_nil);
     c = cell_cons_string("quote", c);
     c = cell_cons(c, cell_nil);
     c = cell_cons_string("%path-search", c);
     //c = cell_cons_string("lookup", c);
     //r = cell_cons(c, r);
-    RefReturn(c);
+    return c;
 }
 
 static Cell *const_closure(Cell *c) {
     return cell_new_string("closure");
-    Ref(Cell *, r, cell_new_string("closure"));
-    RefReturn(r);
 }
 
-static Cell *make_prim_ext(Cell *c0) {
-    Ref(Cell *, c, c0);
+static Cell *make_prim_ext(Cell *c) {
     c = cell_cons(c, cell_nil);
     c = cell_cons_string("external", c);
-    RefReturn(c);
+    return c;
 }
 
 static Cell *lastp(Cell *c) {
@@ -115,45 +112,20 @@ static Cell *lastp(Cell *c) {
     return cell_nil;
 }
 
-/* This was hacked up quickly just to get external commands going at
- * all, and will need some more thought. It doesn't belong here. */
-static Cell *external(Cell *cell0) {
-    char **argv, *cmd;
-    int argc, i;
-    pid_t p, w;
-    Ref(Cell *, cell, cell0);
+static Cell *atomp(Cell *x) {
+    return cell_atomp(x) ? cell_true : cell_nil;
+}
 
-    cell = list_flatten(cell);
-    cmd = cell_car_string(cell);
-    fprint(2, "external command: %O\n", cell);
+static Cell *fxnump(Cell *x) {
+    return cell_fxnump(x) ? cell_true : cell_nil;
+}
 
-    argc = list_length(cell);
-    argv = malloc(sizeof (char *) * (argc + 1));
-    for (i = 0; i < argc; ++i) {
-	argv[i] = cell_car_string(cell);
-	cell = cell_cdr(cell);
-    }
-    argv[i] = 0;
-    RefEnd(cell);
+static Cell *nullp(Cell *x) {
+    return cell_nullp(x) ? cell_true : cell_nil;
+}
 
-    p = fork();
-    switch (p) {
-    case -1:
-	fprint(2, "fork failed!\n");
-	break;
-    case 0:
-	execve(cmd, argv, 0);
-	fprint(2, "exec failed!\n");
-	_exit(1);
-    default:
-	do {
-	    /* One day we'll have to tackle wait() properly. Eugh. */
-	    w = wait(0);
-	} while (w != p);
-	break;
-    }
-    /* And, of course, return what wait() said. */
-    return cell_nil;
+static Cell *pairp(Cell *x) {
+    return cell_pairp(x) ? cell_true : cell_nil;
 }
 
 struct call {
@@ -163,9 +135,9 @@ struct call {
 
 /* keep these in order for bsearch! */
 struct call calls[] = {
-    { "application?", &cell_pairp },
+    { "application?", &pairp },
     { "apply?", &applyp },
-    { "atom?", &cell_atomp },
+    { "atom?", &atomp },
     { "bind", &bind },
     { "caadr", &cell_caadr },
     { "cadadr", &cell_cadadr },
@@ -178,8 +150,6 @@ struct call calls[] = {
     { "cddr", &cell_cddr },
     { "cdr", &cell_cdr },
     { "closure?", &closurep },
-    { "concat", &concat },
-    { "concatp", &concatp },
     { "const-closure", &const_closure },
     { "define?", &definep },
     { "eq-%cons?", &eq_pcconsP },
@@ -191,8 +161,6 @@ struct call calls[] = {
     { "external", &external },
     { "external?", &externalp },
     { "frame", &frame },
-    { "glob", &glob },
-    { "glob_quote", &vm_gq },
     { "if?", &ifp },
     { "immutable?", &immutableP },
     { "internal?", &internalp },
@@ -202,9 +170,9 @@ struct call calls[] = {
     { "lookup?", &lookupp },
     { "make-path-search", &make_path_search },
     { "make-prim-ext", &make_prim_ext },
-    { "null?", &cell_nullp },
-    { "number?", &cell_fxnump },
-    { "pairp", &cell_pairp },
+    { "null?", &nullp },
+    { "number?", &fxnump },
+    { "pairp", &pairp },
     { "prim-apply", &prim_apply },
     { "quote?", &quotep },
     { "reverse", &list_reverse },
@@ -235,19 +203,14 @@ static char *reg_names[] = {
 };
 
 void vm_run(byte *code) {
+    Cell *stack = cell_nil;
     int ip = 0;
     int operand, source;
 
-    Ref(Cell *, stack, cell_nil);
     /* The exp and env registers have been set externally. The other
      * registers we need to zero (as they may contain dangling pointers)
      */
     reg[vm_reg_val] = reg[vm_reg_exp2] = reg[vm_reg_cont] = cell_nil;
-
-    RefAdd(reg[vm_reg_exp]); RefAdd(reg[vm_reg_val]);
-    RefAdd(reg[vm_reg_env]); RefAdd(reg[vm_reg_cont]);
-    RefAdd(reg[vm_reg_argl]); RefAdd(reg[vm_reg_unev]);
-    RefAdd(reg[vm_reg_fun]); RefAdd(reg[vm_reg_exp2]);
 
     /* the first two bytes are the address of label "end": load them into the
      * cont register */
@@ -257,15 +220,15 @@ void vm_run(byte *code) {
 
     while (code[ip] != vm_end) {
 	VmTrace if (ip == 2) {
-	    fprint(2, "vm_run(): EVAL %O\n", reg[vm_reg_exp]);
-	    fprint(2, "vm_run(): EVAL stack: %O\n", stack);
+	    fprintf(stderr, "vm_run(): EVAL %O\n", reg[vm_reg_exp]);
+	    fprintf(stderr, "vm_run(): EVAL stack: %O\n", stack);
         }
 	operand = code[ip] & vm_rmask;
 	switch (code[ip] & vm_imask2) {
 	default: assert(0);
 	case vm_move:
 	    source = (code[ip] & vm_smask) >> 3;
-	    VmTrace fprint(2, "vm_run(): move %O from %s to %s\n",
+	    VmTrace fprintf(stderr, "vm_run(): move %O from %s to %s\n",
 			reg[source], reg_names[source], reg_names[operand]);
 	    reg[operand] = reg[source];
 	    break;
@@ -273,17 +236,17 @@ void vm_run(byte *code) {
 	    switch (code[ip] & vm_imask5) {
 	    default: assert(0);
 	    case vm_nil:
-		VmTrace fprint(2, "vm_run(): nil %s\n", reg_names[operand]);
+		VmTrace fprintf(stderr, "vm_run(): nil %s\n", reg_names[operand]);
 		reg[operand] = cell_nil;
 		break;
 	    case vm_push:
-		VmTrace fprint(2, "vm_run(): %d: push %O from %s\n",
+		VmTrace fprintf(stderr, "vm_run(): %d: push %O from %s\n",
 			    ip, reg[operand], reg_names[operand]);
 		stack = cell_cons(reg[operand], stack);
 		break;
 	    case vm_pop:
 		reg[operand] = cell_car(stack);
-		VmTrace fprint(2, "vm_run(): %d: pop %O to %s\n",
+		VmTrace fprintf(stderr, "vm_run(): %d: pop %O to %s\n",
 			    ip, reg[operand], reg_names[operand]);
 		stack = cell_cdr(stack);
 		break;
@@ -291,53 +254,48 @@ void vm_run(byte *code) {
 		switch (code[ip]) {
 		default: assert(0);
 		case vm_call:
-		    VmTrace fprint(2, "vm_run(): call (%s %O) ==> ",
+		    VmTrace fprintf(stderr, "vm_run(): call (%s %O) ==> ",
 				calls[code[ip + 1]].name, reg[vm_reg_exp]); 
 		    reg[vm_reg_val] = calls[code[++ip]].fn(reg[vm_reg_exp]);
-		    VmTrace fprint(2, "%O\n", reg[vm_reg_val]);
+		    VmTrace fprintf(stderr, "%O\n", reg[vm_reg_val]);
 		    break;
 		case vm_cons:
-		    VmTrace fprint(2, "vm_run(): (cons %O %O) ==> ",
+		    VmTrace fprintf(stderr, "vm_run(): (cons %O %O) ==> ",
 				reg[vm_reg_exp], reg[vm_reg_exp2]);
 		    reg[vm_reg_val] = cell_cons(reg[vm_reg_exp],
 						    reg[vm_reg_exp2]);
-		    VmTrace fprint(2, "%O\n", reg[vm_reg_val]);
+		    VmTrace fprintf(stderr, "%O\n", reg[vm_reg_val]);
 		    break;
 		case vm_branch:
 		    if (!reg[vm_reg_val]) {
-			VmTrace fprint(2, "vm_run(): branch not taken\n");
+			VmTrace fprintf(stderr, "vm_run(): branch not taken\n");
 			ip += 2;
 			break;
 		    }
-		    VmTrace fprint(2, "vm_run(): branch taken\n");
+		    VmTrace fprintf(stderr, "vm_run(): branch taken\n");
 		    /* fall through */
 		case vm_jump:
 		    operand = code[++ip] << 8;
 		    operand += code[++ip];
-		    VmTrace fprint(2, "vm_run(): jump to %d\n", operand);
+		    VmTrace fprintf(stderr, "vm_run(): jump to %d\n", operand);
 		    /* easier to subtract 1 than to skip the "++ip" below */
 		    ip = operand - 1;
 		    break;
 		case vm_loadcont:
 		    operand = code[++ip] << 8;
 		    operand += code[++ip];
-		    VmTrace fprint(2, "vm_run(): load cont with %d\n", operand);
+		    VmTrace fprintf(stderr, "vm_run(): load cont with %d\n", operand);
 		    reg[vm_reg_cont] = cell_new_fxnum(operand);
 		    break;
 		case vm_continue:
 		    ip = cell_car_fxnum(reg[vm_reg_cont]) - 1;
-		    VmTrace fprint(2, "vm_run(): continue at %d\n", ip + 1);
+		    VmTrace fprintf(stderr, "vm_run(): continue at %d\n", ip + 1);
 		    break;
 		}
 	    }
 	}
 	++ip;
     }
-    RefRemove(reg[vm_reg_exp2]); RefRemove(reg[vm_reg_fun]);
-    RefRemove(reg[vm_reg_unev]); RefRemove(reg[vm_reg_argl]);
-    RefRemove(reg[vm_reg_cont]); RefRemove(reg[vm_reg_env]);
-    RefRemove(reg[vm_reg_val]); RefRemove(reg[vm_reg_exp]);
-    RefEnd(stack);
 }
 
 void vm_reg_set(int r, void *val) {
