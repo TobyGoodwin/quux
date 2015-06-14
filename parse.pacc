@@ -5,8 +5,11 @@
 Es :: Cell * ← __ f:Form __ Semi? __ e:Es → { syn_sequence(f, e) }
              / __ f:Form __ → f
 
-Form ← Defn
+Form ← Raw
+     / Defn
      / Command
+
+Raw ← Quote l:RawList → { cell_car(l) }
 
 Defn ← ws:Words Equals l:List → { syn_define(ws, l) }
 
@@ -14,6 +17,11 @@ Body ← f:Form b:Body → { syn_sequence(f, b) }
      / Form
 
 Command ← i:Item l:List → { syn_command(i, l) }
+
+RawList ← LPar l:RawList RPar k:RawList →
+                { list_append(cell_cons(l, cell_nil), k) }
+        / w:Word l:RawList → { cell_cons(w, l) }
+        / ε → cell_nil
 
 List ← i:Item $ l:List → { cell_cons(i, l) }
      / ε → cell_nil
@@ -53,4 +61,5 @@ Dollar ← "$" _
 Equals ← "=" _
 LPar ← "(" _
 RPar ← ")" _
+Quote ← "\"" _
 Semi ← ";" _

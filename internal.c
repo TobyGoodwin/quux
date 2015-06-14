@@ -15,7 +15,7 @@
 
 static Cell *echo(Cell *a) {
     printf("%s\n", cell_asprint_flat(a, " "));
-    return cell_nil;
+    return cell_cons_string("echo_done", cell_nil);
 }
 
 static Cell *intl_parse_string(Cell *a) {
@@ -64,6 +64,8 @@ static Cell *read_file(Cell *a) {
 
 /* XXX obviously, needs proper dispatch */
 Cell *internal(char *f, Cell *args) {
+    if (streq(f, "%echo"))
+        return echo(args);
     if (streq(f, "echo"))
         return echo(args);
     if (streq(f, "exit"))

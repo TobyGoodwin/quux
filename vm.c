@@ -9,7 +9,7 @@
 #include "streq.h"
 #include "vm.h"
 
-#define VmTrace if (0)
+#define VmTrace if (1)
 
 static Cell *reg[8];
 
@@ -265,11 +265,13 @@ void vm_run(byte *code) {
                             cell_asprint(reg[vm_reg_val]));
 		    break;
 		case vm_cons:
-		    VmTrace fprintf(stderr, "vm_run(): (cons %O %O) ==> ",
-				reg[vm_reg_exp], reg[vm_reg_exp2]);
+		    VmTrace fprintf(stderr, "vm_run(): (cons %s %s) ==> ",
+                            cell_asprint(reg[vm_reg_exp]),
+                            cell_asprint(reg[vm_reg_exp2]));
 		    reg[vm_reg_val] = cell_cons(reg[vm_reg_exp],
 						    reg[vm_reg_exp2]);
-		    VmTrace fprintf(stderr, "%O\n", reg[vm_reg_val]);
+		    VmTrace fprintf(stderr, "%s\n",
+                            cell_asprint(reg[vm_reg_val]));
 		    break;
 		case vm_branch:
 		    if (!reg[vm_reg_val]) {
