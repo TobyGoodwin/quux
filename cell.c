@@ -261,11 +261,36 @@ Cell *cell_caar(Cell *c) { return cell_car(cell_car(c)); }
 Cell *cell_cadr(Cell *c) { return cell_car(cell_cdr(c)); }
 Cell *cell_cdar(Cell *c) { return cell_cdr(cell_car(c)); }
 Cell *cell_cddr(Cell *c) { return cell_cdr(cell_cdr(c)); }
-Cell *cell_cadar(Cell *c) { return cell_car(cell_cdr(cell_car(c))); }
+
+Cell *cell_caaar(Cell *c) { return cell_car(cell_caar(c)); }
+Cell *cell_caadr(Cell *c) { return cell_car(cell_cadr(c)); }
+Cell *cell_cadar(Cell *c) { return cell_car(cell_cdar(c)); }
 Cell *cell_caddr(Cell *c) { return cell_car(cell_cddr(c)); }
+
+Cell *cell_cdaar(Cell *c) { return cell_cdr(cell_caar(c)); }
 Cell *cell_cdadr(Cell *c) { return cell_cdr(cell_cadr(c)); }
+Cell *cell_cddar(Cell *c) { return cell_cdr(cell_cdar(c)); }
+Cell *cell_cdddr(Cell *c) { return cell_cdr(cell_cddr(c)); }
+
+Cell *cell_caaaar(Cell *c) { return cell_car(cell_caaar(c)); }
+Cell *cell_caaadr(Cell *c) { return cell_car(cell_caadr(c)); }
+Cell *cell_caadar(Cell *c) { return cell_car(cell_cadar(c)); }
+Cell *cell_caaddr(Cell *c) { return cell_car(cell_caddr(c)); }
+
+Cell *cell_cadaar(Cell *c) { return cell_car(cell_cdaar(c)); }
 Cell *cell_cadadr(Cell *c) { return cell_car(cell_cdadr(c)); }
-Cell *cell_cadddr(Cell *c) { return cell_car(cell_cdr(cell_cddr(c))); }
+Cell *cell_caddar(Cell *c) { return cell_car(cell_cddar(c)); }
+Cell *cell_cadddr(Cell *c) { return cell_car(cell_cdddr(c)); }
+
+Cell *cell_cdaaar(Cell *c) { return cell_cdr(cell_caaar(c)); }
+Cell *cell_cdaadr(Cell *c) { return cell_cdr(cell_caadr(c)); }
+Cell *cell_cdadar(Cell *c) { return cell_cdr(cell_cadar(c)); }
+Cell *cell_cdaddr(Cell *c) { return cell_cdr(cell_caddr(c)); }
+
+Cell *cell_cddaar(Cell *c) { return cell_cdr(cell_cdaar(c)); }
+Cell *cell_cddadr(Cell *c) { return cell_cdr(cell_cdadr(c)); }
+Cell *cell_cdddar(Cell *c) { return cell_cdr(cell_cddar(c)); }
+Cell *cell_cddddr(Cell *c) { return cell_cdr(cell_cdddr(c)); }
 
 #if 0
 Cell *cell_caadr(Cell *c0) {
@@ -506,19 +531,6 @@ Cell *list_enlist(Cell *c0) {
     RefReturn(c);
 }
 
-/* flatten a list, (foo (bar baz) qux) => (foo bar baz qux) */
-Cell *list_flatten(Cell *c0) {
-    /* this is not an efficient implementation! */
-    return cell_from_list(cell_to_list(c0));
-}
-
-/* list_length(): guess what? */
-int list_length(Cell *c) {
-    int r = 0;
-    for ( ; !cell_nullp(c); c = cell_cdr(c))
-	++r;
-    return r;
-}
 #endif
 
 /* non-mutating append */
@@ -558,24 +570,6 @@ Cell *list_headedP(Cell *c, char *h) {
 }
 
 #if 0
-/* list_reverse() builds a new list, and - while it is O(n) in time - is
- * therefore somewhat inefficient. We could make a much quicker
- * destructive reverse using cell_cleave()...
- */
-Cell *list_reverse(Cell *c0) {
-    Ref(Cell *, r, cell_nil);
-    Ref(Cell *, c, c0);
-//fprint(2, "reverse(): input is %O\n", c);
-    for ( ; c; c = cell_cdr(c)) {
-	Ref(Cell *, a, cell_car(c));
-	r = cell_cons(a, r);
-	RefEnd(a);
-    }
-    RefEnd(c);
-//fprint(2, "reverse(): result is %O\n", r);
-    RefReturn(r);
-}
-
 Cell *list_singletonP(Cell *c) {
     if (cell_pairp(c) && !cell_cdr(c))
 	return cell_true;
@@ -584,7 +578,13 @@ Cell *list_singletonP(Cell *c) {
 #endif
 
 int cell_fprint(FILE *f, Cell *c) {
-    int atom = cell_atomp(c);
+    int atom;
+   
+    if (!c) {
+        fprintf(f, "()");
+        return 2;
+    }
+    atom = cell_atomp(c);
 
     Cell *next = cell_nil;
     if (!atom) fprintf(f, "(");

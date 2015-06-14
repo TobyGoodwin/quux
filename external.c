@@ -5,13 +5,15 @@
 #include <unistd.h>
 
 #include "external.h"
+#include "list.h"
+#include "tree.h"
 
 Cell *external(Cell *cell) {
     char **argv, *cmd;
     int argc, i;
     pid_t p, w;
 
-    cell = list_flatten(cell);
+    cell = tree_flatten(cell);
     cmd = cell_car_string(cell);
     fprintf(stderr, "external command: %O\n", cell);
 

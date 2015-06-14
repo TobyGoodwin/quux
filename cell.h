@@ -50,15 +50,40 @@ extern Cell *cell_cleaveM(Cell *);
 extern Cell *cell_cdr(Cell *);
 extern Cell *cell_cdr_cell(Cell *);
 
-extern Cell *cell_caadr(Cell *);
-extern Cell *cell_cadadr(Cell *);
-extern Cell *cell_cadar(Cell *);
-extern Cell *cell_cadddr(Cell *);
-extern Cell *cell_caddr(Cell *);
-extern Cell *cell_cadr(Cell *);
-extern Cell *cell_cdaadr(Cell *);
-extern Cell *cell_cdadr(Cell *);
-extern Cell *cell_cddr(Cell *);
+Cell *cell_caar(Cell *c);
+Cell *cell_cadr(Cell *c);
+Cell *cell_cdar(Cell *c);
+Cell *cell_cddr(Cell *c);
+
+Cell *cell_caaar(Cell *c);
+Cell *cell_caadr(Cell *c);
+Cell *cell_cadar(Cell *c);
+Cell *cell_caddr(Cell *c);
+
+Cell *cell_cdaar(Cell *c);
+Cell *cell_cdadr(Cell *c);
+Cell *cell_cddar(Cell *c);
+Cell *cell_cdddr(Cell *c);
+
+Cell *cell_caaaar(Cell *c);
+Cell *cell_caaadr(Cell *c);
+Cell *cell_caadar(Cell *c);
+Cell *cell_caaddr(Cell *c);
+
+Cell *cell_cadaar(Cell *c);
+Cell *cell_cadadr(Cell *c);
+Cell *cell_caddar(Cell *c);
+Cell *cell_cadddr(Cell *c);
+
+Cell *cell_cdaaar(Cell *c);
+Cell *cell_cdaadr(Cell *c);
+Cell *cell_cdadar(Cell *c);
+Cell *cell_cdaddr(Cell *c);
+
+Cell *cell_cddaar(Cell *c);
+Cell *cell_cddadr(Cell *c);
+Cell *cell_cdddar(Cell *c);
+Cell *cell_cddddr(Cell *c);
 
 /* extra accessors for gc */
 extern int _cell_car_t(Cell *);

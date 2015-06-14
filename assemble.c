@@ -65,7 +65,7 @@ byte *assemble(Cell *code) {
 		int dst = reg_code(cell_car_string(cell_cdr(line)));
 		byte_code[ip++] = vm_pop | dst;
 	    } else if (streq(ins, "call")) {
-		int fun = 7; //vm_encode_call(cell_car_string(cell_cdr(line)));
+		int fun = vm_encode_call(cell_car_string(cell_cdr(line)));
 		byte_code[ip++] = vm_call;
 		byte_code[ip++] = fun;
 	    } else if (streq(ins, "cons")) {

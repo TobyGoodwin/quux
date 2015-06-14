@@ -63,9 +63,33 @@ Cell *syn_define(Cell *left, Cell *right) {
     SynTrace fprintf(stderr, "syn_define(): result is %s\n", cell_asprint(r));
     return r;
 }
+/* The unquote() function handles the argument to the $ operator (which
+ * is implicit for the first item in a command). XXX: there is a smell
+ * of arbitrariness about some of this; it needs to be reconsidered
+ * carefully. (In mitigation, unit_parse.c checks that the obvious cases
+ * work OK.) */
+Cell *unquote(Cell *c) {
+    SynTrace fprintf(stderr, "unquote(%s)\n", cell_asprint(c));
+    /* The obvious case: (quote x) ==> x */
+    if (list_headedP(c, "quote"))
+	return cell_cadr(c);
+    return c;
+
+    if (cell_atomp(c))
+        return prefixplus("lookup", c);
+    /* Unquote a lambda expression by applying it. */
+    if (list_headedP(c, "lambda"))
+	if (!cell_cadr(c)) /* null args => closure */
+	    return cell_cons(c, cell_nil);
+    return c;
+}
 
 Cell *syn_command(Cell *c, Cell *l) {
-    return 0;
+    if (cell_nullp(c))
+        return cell_nil;
+    c = unquote(c);
+    c = cell_cons(c, l);
+    return c;
 }
 
 Cell *syn_prefix(char *p, Cell *c) {

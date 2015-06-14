@@ -9,7 +9,7 @@
 #include "streq.h"
 #include "vm.h"
 
-#define VmTrace if (1)
+#define VmTrace if (0)
 
 static Cell *reg[8];
 
@@ -54,8 +54,9 @@ static Cell *frame(Cell *c) {
     return env_frame(e, n, v);
 }
 
-static Cell *prim_apply(Cell *c) {
-    VmTrace fprintf(stderr, "prim_apply(): call %O%O\n", c, reg[vm_reg_argl]);
+static Cell *internal_call(Cell *c) {
+    VmTrace fprintf(stderr, "internal_call(): call %s %s\n",
+                cell_asprint(c), cell_asprint(reg[vm_reg_argl]));
     return internal(cell_car_string(c), reg[vm_reg_argl]);
 }
 
@@ -163,6 +164,7 @@ struct call calls[] = {
     { "frame", &frame },
     { "if?", &ifp },
     { "immutable?", &immutableP },
+    { "internal", &internal_call },
     { "internal?", &internalp },
     { "lambdap", &lambdap },
     { "last?", &lastp },
@@ -173,7 +175,6 @@ struct call calls[] = {
     { "null?", &nullp },
     { "number?", &fxnump },
     { "pairp", &pairp },
-    { "prim-apply", &prim_apply },
     { "quote?", &quotep },
     { "reverse", &list_reverse },
     { "sequence?", &sequencep },
@@ -220,16 +221,18 @@ void vm_run(byte *code) {
 
     while (code[ip] != vm_end) {
 	VmTrace if (ip == 2) {
-	    fprintf(stderr, "vm_run(): EVAL %O\n", reg[vm_reg_exp]);
-	    fprintf(stderr, "vm_run(): EVAL stack: %O\n", stack);
+	    fprintf(stderr, "vm_run(): EVAL %s\n",
+                    cell_asprint(reg[vm_reg_exp]));
+	    fprintf(stderr, "vm_run(): EVAL stack: %s\n", cell_asprint(stack));
         }
 	operand = code[ip] & vm_rmask;
 	switch (code[ip] & vm_imask2) {
 	default: assert(0);
 	case vm_move:
 	    source = (code[ip] & vm_smask) >> 3;
-	    VmTrace fprintf(stderr, "vm_run(): move %O from %s to %s\n",
-			reg[source], reg_names[source], reg_names[operand]);
+	    VmTrace fprintf(stderr, "vm_run(): move %s from %s to %s\n",
+			cell_asprint(reg[source]),
+                        reg_names[source], reg_names[operand]);
 	    reg[operand] = reg[source];
 	    break;
 	case vm_i5:
@@ -240,24 +243,26 @@ void vm_run(byte *code) {
 		reg[operand] = cell_nil;
 		break;
 	    case vm_push:
-		VmTrace fprintf(stderr, "vm_run(): %d: push %O from %s\n",
-			    ip, reg[operand], reg_names[operand]);
+		VmTrace fprintf(stderr, "vm_run(): %d: push %s from %s\n",
+                        ip, cell_asprint(reg[operand]), reg_names[operand]);
 		stack = cell_cons(reg[operand], stack);
 		break;
 	    case vm_pop:
 		reg[operand] = cell_car(stack);
-		VmTrace fprintf(stderr, "vm_run(): %d: pop %O to %s\n",
-			    ip, reg[operand], reg_names[operand]);
+		VmTrace fprintf(stderr, "vm_run(): %d: pop %s to %s\n",
+                            ip, cell_asprint(reg[operand]), reg_names[operand]);
 		stack = cell_cdr(stack);
 		break;
 	    case vm_i8:
 		switch (code[ip]) {
 		default: assert(0);
 		case vm_call:
-		    VmTrace fprintf(stderr, "vm_run(): call (%s %O) ==> ",
-				calls[code[ip + 1]].name, reg[vm_reg_exp]); 
+		    VmTrace fprintf(stderr, "vm_run(): call (%s %s) ==> ",
+				calls[code[ip + 1]].name,
+                                cell_asprint(reg[vm_reg_exp]));
 		    reg[vm_reg_val] = calls[code[++ip]].fn(reg[vm_reg_exp]);
-		    VmTrace fprintf(stderr, "%O\n", reg[vm_reg_val]);
+		    VmTrace fprintf(stderr, "%s\n",
+                            cell_asprint(reg[vm_reg_val]));
 		    break;
 		case vm_cons:
 		    VmTrace fprintf(stderr, "vm_run(): (cons %O %O) ==> ",

@@ -7,6 +7,16 @@
 #include "streq.h"
 #include "tree.h"
 
+/* construct the flat list (foo bar baz qux) */
+Cell *fbbq(void) {
+    Cell *c3 = cell_nil;
+    Cell *c0 = cell_cons_string("qux", cell_nil);
+    Cell *c1 = cell_cons_string("baz", c0);
+    Cell *c2 = cell_cons_string("bar", c1);
+    c3 = cell_cons_string("foo", c2);
+    return c3;
+}
+
 void test_flatten(void) {
     Cell *c, *t;
     char *s;
@@ -44,19 +54,15 @@ void test_flatten(void) {
     fprintf(stderr, "tree_flatten %s ==> %s\n", cell_asprint(c), s);
     check(streq(s, "(three two one three two one)"));
 
-}
-
-/* construct the flat list (foo bar baz qux) */
-Cell *fbbq(void) {
-    Cell *c3 = cell_nil;
-    Cell *c0 = cell_cons_string("qux", cell_nil);
-    Cell *c1 = cell_cons_string("baz", c0);
-    Cell *c2 = cell_cons_string("bar", c1);
-    c3 = cell_cons_string("foo", c2);
-    return c3;
+    c = fbbq();
+    c = cell_cons(cell_nil, c);
+    t = tree_flatten(c);
+    s = cell_asprint(t);
+    fprintf(stderr, "tree_flatten %s ==> %s\n", cell_asprint(c), s);
+    check(streq(s, "(foo bar baz qux)"));
 }
 
 int main(void) {
-    printf("1..27\n");
+    printf("1..7\n");
     test_flatten();
 }

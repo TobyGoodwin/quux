@@ -1,6 +1,7 @@
 quux
 unit_cell
 unit_env
+unit_list
 unit_tree
 *.o
 *.log

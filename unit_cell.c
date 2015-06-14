@@ -14,8 +14,13 @@ void check(int x) {
 
 /* the nil cell */
 void test0(void) {
-    Cell *c = cell_nil;
+    Cell *c;
+    char *s;
+   
+    c = cell_nil;
     check(cell_nullp(c));
+    s = cell_asprint(c);
+    check(streq(s, "()"));
 }
 
 void test1(void) {

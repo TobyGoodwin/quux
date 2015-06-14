@@ -10,7 +10,9 @@ int main(void) {
     Cell *c, *env, *quux;
     byte *interp;
 
-    c = parse_string("%echo hello world");
+    c = parse_string("%echo hello world; %echo goodbye again");
+    fprintf(stderr, "c is %s\n", cell_asprint(c));
+
     quux = parse_file("quux.vmc");
     quux = cell_caddr(quux); /* remove unneeded "(define vmc ...)" */
     quux = cell_to_vmc(quux);
@@ -18,9 +20,8 @@ int main(void) {
     env = env_frame(cell_nil, cell_nil, cell_nil);
     vm_reg_set(vm_reg_env, env);
     vm_reg_set(vm_reg_exp, c);
-#if 0
+    fprintf(stderr, "exp is %s\n", cell_asprint(vm_reg_get(vm_reg_exp)));
     vm_run(interp);
-#endif
 
     return 0;
 }

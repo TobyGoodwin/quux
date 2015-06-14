@@ -252,12 +252,12 @@ apply-%lookup
     (jump eval-lookup)
 # XXX %echo as an immutable is just to save my head while testing
 apply-%echo
-    (call prim-apply) (continue)
+    (call internal) (continue)
 apply-prim
     # we have (internal foo): extract the name
     (call cadr) (move val exp)
-    # and call the prim applier
-    (call prim-apply)
+    # and call internally
+    (call internal)
     (continue)
 apply-external
     # (external date) => run the date command

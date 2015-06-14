@@ -13,6 +13,7 @@ quux_SOURCES = \
     feed.c \
     input.c \
     internal.c \
+    list.c \
     main.c \
     parse.c \
     syn.c \
@@ -22,11 +23,13 @@ quux_SOURCES = \
 check_PROGRAMS = \
     unit_cell \
     unit_env \
+    unit_list \
     unit_tree
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) tap-driver.sh
-TESTS = unit_cell unit_env unit_tree
+TESTS = unit_cell unit_env unit_list unit_tree
 
 unit_cell_SOURCES = cell.c unit_cell.c
 unit_env_SOURCES = cell.c check.c env.c unit_env.c
+unit_list_SOURCES = cell.c check.c list.c unit_list.c
 unit_tree_SOURCES = cell.c check.c tree.c unit_tree.c

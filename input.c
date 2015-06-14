@@ -23,6 +23,7 @@ Cell *parse_mem(char *a, size_t s) {
     }
     return 0;
 }
+
 Cell *parse_file(char *fn) {
     Cell *r;
     char *addr;

@@ -1,3 +1,30 @@
+2015-06-14
+==========
+
+The previous implementation of `list_flatten` worked by bouncing through the
+old `List` represenation:
+
+    Cell *list_flatten(Cell *c0) {
+             /* this is not an efficient implementation! */
+            return cell_from_list(cell_to_list(c0));
+    }
+
+Obviously we no longer have `List`, so the inevitable rewrite became urgent.
+I'm pleased to report that it is 5 lines of code, which I got right first time!
+
+    static Cell *flat(Cell *a, Cell *t) {
+        if (!t)
+            return a;
+        if (cell_atomp(t))
+            return cell_cons(t, a);
+        a = flat(a, cell_cdr(t));
+        return list_append(flat(cell_nil, cell_car(t)), a);
+    }
+
+    Cell *tree_flatten(Cell *t) {
+        return flat(cell_nil, t);
+    }
+
 2015-06-09
 ==========
 
