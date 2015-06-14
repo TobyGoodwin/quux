@@ -76,7 +76,7 @@ Cell *unquote(Cell *c) {
     return c;
 
     if (cell_atomp(c))
-        return prefixplus("lookup", c);
+        return syn_prefix("lookup", c);
     /* Unquote a lambda expression by applying it. */
     if (list_headedP(c, "lambda"))
 	if (!cell_cadr(c)) /* null args => closure */
@@ -96,12 +96,48 @@ Cell *syn_prefix(char *p, Cell *c) {
     return cell_cons_string(p, cell_cons(c, cell_nil));
 }
 
-Cell *syn_eval(Cell *e) {
-    return 0;
+Cell *syn_eval(Cell *c) {
+    fprintf(stderr, "make_eval(): evaluand was %s\n", cell_asprint(c));
+    if (list_headedP(c, "quote"))
+        c = cell_cadr(c);
+    else if (list_headedP(c, "lambda"))
+        c = cell_cons(c, cell_nil);
+    /* Parentheses after a $ imply grouping, not listage. For example,
+     * "foobar=qux; echo $(foo^bar)" ==> qux */
+    else if (list_headedP(c, "%list"))
+        cell_car_set_string(c, "%eval");
+    else
+        c = syn_prefix("eval", c);
+    fprintf(stderr, "make_eval(): evaluand is now %s\n", cell_asprint(c));
+    return c;
 }
-Cell *syn_lambda(Cell *l, Cell *c) {
-    return 0;
+
+Cell *syn_lambda(Cell *args, Cell *body) {
+    Cell *r = cell_nil;
+
+    fprintf(stderr, "make_lambda(): body is %s\n", cell_asprint(body));
+    /* If the body is a thunk, we can recycle it. XXX: this *looks* like
+     * a mere optimization, but in fact is definitely very important,
+     * otherwise we end up with unevaluated (unapplied) thunks. Need to
+     * check this out some more. Test case: "f = lambda (x) { echo $x };
+     * f qux" */
+    if (cell_stringp(body) && streq(cell_car_string(body), "lambda")) {
+        Cell *c;
+        c = cell_cdr(body);
+        if (!cell_car_cell(c)) {
+            cell_car_set(c, args); /* splice in the formals list */
+    fprintf(stderr, "make_lambda(): body is %s\n", cell_asprint(body));
+        }
+        return body;
+    }
+    r = cell_cons(body, r);
+    r = cell_cons(args, r);
+    r = cell_cons_string("lambda", r);
+    fprintf(stderr, "make_lambda(%s, %s) ==> %s\n",
+            cell_asprint(args), cell_asprint(body), cell_asprint(r));
+    return r;
 }
+
 Cell *syn_if(Cell *i, Cell *j, Cell *k) {
     return 0;
 }

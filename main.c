@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "assemble.h"
 #include "cell.h"
@@ -10,8 +11,13 @@ int main(void) {
     Cell *c, *env, *quux;
     byte *interp;
 
-    c = parse_string("%echo hello world; %echo goodbye again");
+    //c = parse_string("echo = (internal echo); echo hello world");
+    c = parse_string("eval x = { x }; (internal exit) $${ (internal parse-string) ${ (internal read-file) prelude.es } }");
+    //c = parse_string("(internal exit) $ $ { (internal parse-string) $ { (internal read-file) prelude.es  }");
+    //c = parse_string("c = (echo hello world)");
+    //c = cell_cadr(c);
     fprintf(stderr, "c is %s\n", cell_asprint(c));
+    //exit(1);
 
     quux = parse_file("quux.vmc");
     quux = cell_caddr(quux); /* remove unneeded "(define vmc ...)" */
