@@ -12,7 +12,7 @@ int main(void) {
     byte *interp;
 
     env = env_frame(cell_nil, cell_nil, cell_nil);
-    c = parse_string("\"(sequence (define foo (quote bar)) ((core eval) (quote foo)))");
+    c = parse_string("\"(sequence (define echo (internal echo)) (echo (quote hello) (quote world)))");
     fprintf(stderr, "c is %s\n", cell_asprint(c));
     //env_bind(env, cell_new_string("l"), c);
     vm_reg_set(vm_reg_env, env);

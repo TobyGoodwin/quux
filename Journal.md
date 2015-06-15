@@ -21,7 +21,8 @@ Here[1] is a list of "syntactic keywords" that might be useful.
 [1] http://groups.csail.mit.edu/mac/ftpdir/scheme-7.4/doc-html/scheme_2.html#SEC27
 
 OK. Let's go with `(core cons)` etc. and see where we get to. Yup, that
-seems to work fine.
+seems to work fine. Now done for `cons`, `echo`, `eval` and `lookup`.
+Errm, we really don't need `(core echo)` when we have `(internal echo)`.
 
 2015-06-14
 ==========

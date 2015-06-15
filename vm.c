@@ -51,7 +51,6 @@ static Cell *core_foop(Cell *c, char *x) {
     return streq(cell_car_string(cell_cdr(c)), x) ? cell_true : cell_nil;
 }
 static Cell *core_consp(Cell *c) { return core_foop(c, "cons"); }
-static Cell *core_echop(Cell *c) { return core_foop(c, "echo"); }
 static Cell *core_evalp(Cell *c) { return core_foop(c, "eval"); }
 static Cell *core_lookupp(Cell *c) { return core_foop(c, "lookup"); }
 
@@ -148,7 +147,6 @@ struct call calls[] = {
     { "closure?", &closurep },
     { "const-closure", &const_closure },
     { "core-cons?", &core_consp },
-    { "core-echo?", &core_echop },
     { "core-eval?", &core_evalp },
     { "core-lookup?", &core_lookupp },
     { "core?", &corep },

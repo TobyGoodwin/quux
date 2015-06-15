@@ -223,7 +223,6 @@ apply-atom
     (jump eval-atom)
 apply-core
     (call core-cons?) (branch apply-core-cons)
-    (call core-echo?) (branch apply-core-echo) # temp
     (call core-eval?) (branch apply-core-eval)
     (call core-lookup?) (branch apply-core-lookup)
     (jump fail)
@@ -235,8 +234,6 @@ apply-core-cons
     (move argl exp) (call car) (move val exp)
     (cons)
     (continue)
-apply-core-echo
-    (call internal) (continue)
 apply-core-eval
     # evaluate the car of argl (rest of argl is ignored... for now!)
     (move argl exp) (call car) (move val exp)
@@ -248,7 +245,6 @@ apply-list
     # list is the identity function
     (move argl val)
     (continue)
-# XXX %echo as an immutable is just to save my head while testing
 apply-prim
     # we have (internal foo): extract the name
     (call cadr) (move val exp)
