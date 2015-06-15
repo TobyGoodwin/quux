@@ -1,3 +1,28 @@
+2015-06-15
+==========
+
+Thinking about these "core" functions some more: `list` is trivial to
+implement in Scheme. Well, provided we support the version of lambda
+where formals is a single name, which is bound to the entire argument
+list. (Currently we don't.) In fact, list is the identity function:
+
+  (define list (lambda x x ))
+
+However, I don't see any particularly good reason why the parser needs
+to generate calls to `list`. I'm reasonably sure that `eval` can be
+written in Scheme, although not quite sure how at the moment. At least
+`car` and `cdr` and `cons` will need to be core functions. I don't think
+having `%car` etc is a *terrible* way to do this, although I'm not sure
+it's the best. I do quite like `(core car)`, although it does steal the
+name `core`.
+
+Here[1] is a list of "syntactic keywords" that might be useful.
+
+[1] http://groups.csail.mit.edu/mac/ftpdir/scheme-7.4/doc-html/scheme_2.html#SEC27
+
+OK. Let's go with `(core cons)` etc. and see where we get to. Yup, that
+seems to work fine.
+
 2015-06-14
 ==========
 

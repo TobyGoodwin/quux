@@ -5,6 +5,7 @@ eval-dispatch
     (call quote?) (branch eval-quote)
     (call define?) (branch eval-define)
     (call lambdap) (branch ev-lambda)
+    (call core?) (branch self-evaluating)
     (call internal?) (branch self-evaluating)
     (call sequence?) (branch ev-sequence)
     (call if?) (branch eval-if)
@@ -14,7 +15,6 @@ eval-dispatch
 eval-atom
     (call null?) (branch self-evaluating)
     (call number?) (branch self-evaluating)
-    (call eq-%echo?) (branch self-evaluating) # XXX
     # must be a variable name (we don't have symbols (yet))
     (jump eval-lookup)
 self-evaluating
@@ -61,7 +61,7 @@ ev-lookup1
     (branch ev-lookup4)
     # no binding? (lookup qux) ==> (apply (lookup path-search) qux)
     # note that we must check that qux is not already path-search!
-    (call eq-%path-search?) (branch fail)
+    (call eq-path-search?) (branch fail)
     (call make-path-search) (move val exp)
     (push cont) (loadcont ev-lookup2) (push argl)
     (jump eval-dispatch)
@@ -165,10 +165,6 @@ ev-apply
     # no args case: evaluate the operator
     (call car) (move val exp)
     (push cont) (loadcont setup-no-arg-apply)
-    # %cons, %eval, %list, and %lookup are "immutable hooks": they could
-    # be real hook functions, but they're so fundamental that it would
-    # be insane to override them
-    (call immutable?) (branch self-evaluating)
     (jump eval-dispatch)
 setup-no-arg-apply
     (pop cont) (move val fun)
@@ -180,7 +176,6 @@ ev-apply-args
     (call car) (move val exp)
     (push unev) (push env) (push cont)
     (loadcont ev-apply2)
-    (call immutable?) (branch self-evaluating)
     (jump eval-dispatch)
 ev-apply2
     (pop cont) (pop env) (pop unev)
@@ -215,44 +210,45 @@ accumulate-last-arg
 apply-dispatch
     (move fun exp)
     (call atom?) (branch apply-atom)
+    (call core?) (branch apply-core)
     (call internal?) (branch apply-prim)
     (call external?) (branch apply-external)
     (call closure?) (branch apply-closure)
     (jump fail)
 apply-atom
-    (call eq-%cons?) (branch apply-%cons)
-    (call eq-%eval?) (branch apply-%eval)
-    (call eq-list?) (branch apply-list)
-    (call eq-%lookup?) (branch apply-%lookup)
-    (call eq-%echo?) (branch apply-%echo) # XXX temp
-    (jump fail)
     (call null?) (branch fail)
     # this is not at all Schemely!
     (move fun exp)
     (push cont) (loadcont apply-atom-redispatch)
     (jump eval-atom)
+apply-core
+    (call core-cons?) (branch apply-core-cons)
+    (call core-echo?) (branch apply-core-echo) # temp
+    (call core-eval?) (branch apply-core-eval)
+    (call core-lookup?) (branch apply-core-lookup)
+    (jump fail)
 apply-atom-redispatch
     (pop cont)
     (move val fun) (jump apply-dispatch)
-apply-%cons
+apply-core-cons
     (move argl exp) (call cadr) (move val exp2)
     (move argl exp) (call car) (move val exp)
     (cons)
     (continue)
-apply-%eval
+apply-core-echo
+    (call internal) (continue)
+apply-core-eval
     # evaluate the car of argl (rest of argl is ignored... for now!)
     (move argl exp) (call car) (move val exp)
     (jump eval-dispatch)
+apply-core-lookup
+    (move argl exp) (call car)
+    (jump eval-lookup)
 apply-list
     # list is the identity function
     (move argl val)
     (continue)
-apply-%lookup
-    (move argl exp) (call car)
-    (jump eval-lookup)
 # XXX %echo as an immutable is just to save my head while testing
-apply-%echo
-    (call internal) (continue)
 apply-prim
     # we have (internal foo): extract the name
     (call cadr) (move val exp)

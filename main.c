@@ -12,7 +12,7 @@ int main(void) {
     byte *interp;
 
     env = env_frame(cell_nil, cell_nil, cell_nil);
-    c = parse_string("l x = x");
+    c = parse_string("\"(sequence (define foo (quote bar)) ((core eval) (quote foo)))");
     fprintf(stderr, "c is %s\n", cell_asprint(c));
     //env_bind(env, cell_new_string("l"), c);
     vm_reg_set(vm_reg_env, env);
@@ -20,7 +20,6 @@ int main(void) {
     //c = parse_string("echo = (internal echo); echo hello world");
     //c = parse_string("eval x = { x }; (internal exit) $${ (internal parse-string) ${ (internal read-file) prelude.es } }");
     //c = parse_string("\"(l (quote %echo) (quote hello) (quote world))");
-    fprintf(stderr, "c is %s\n", cell_asprint(c));
     //exit(0);
 
     quux = parse_file("quux.vmc");

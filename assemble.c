@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdlib.h>
 
 #include "assemble.h"
 #include "cell.h"
@@ -120,7 +121,11 @@ byte *assemble(Cell *code) {
 	void *tgt = cell_assoc(cell_car(l), labels);
 	AsTrace fprintf(stderr, "fixing jump at %d, target is %s (%s)\n",
 		    where, lab, cell_asprint(tgt));
-        assert(!cell_nullp(tgt));
+        if (cell_nullp(tgt)) {
+            fprintf(stderr, "quux: fatal: cannot find target `%s'\n",
+                    cell_car_string(l));
+            exit(1);
+        }
         assert(cell_fxnump(tgt));
         int t = cell_car_fxnum(tgt);
         byte_code[where] = (t & 0xff00) >> 8;

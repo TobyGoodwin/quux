@@ -2,7 +2,7 @@
 
 #include "streq.h"
 
-#define SynTrace if (1)
+#define SynTrace if (0)
 /* syn_sequence() yields (sequence t1 t2). If t2 is already a sequence, fold
  * t1 into it. */
 extern Cell *syn_sequence(Cell *t1, Cell *t2) {

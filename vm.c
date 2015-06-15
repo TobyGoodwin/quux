@@ -17,6 +17,7 @@ static Cell *applyp(Cell *c) { return list_headedP(c, "apply"); }
 static Cell *definep(Cell *c) { return list_headedP(c, "define"); }
 static Cell *closurep(Cell *c) { return list_headedP(c, "closure"); }
 static Cell *concatp(Cell *c) { return list_headedP(c, "concat"); }
+static Cell *corep(Cell *c) { return list_headedP(c, "core"); }
 static Cell *externalp(Cell *c) { return list_headedP(c, "external"); }
 static Cell *ifp(Cell *c) { return list_headedP(c, "if"); }
 static Cell *internalp(Cell *c) { return list_headedP(c, "internal"); }
@@ -45,6 +46,15 @@ static Cell *bind(Cell *c) {
     return cell_nil;
 }
 
+static Cell *core_foop(Cell *c, char *x) {
+    assert(streq(cell_car_string(c), "core"));
+    return streq(cell_car_string(cell_cdr(c)), x) ? cell_true : cell_nil;
+}
+static Cell *core_consp(Cell *c) { return core_foop(c, "cons"); }
+static Cell *core_echop(Cell *c) { return core_foop(c, "echo"); }
+static Cell *core_evalp(Cell *c) { return core_foop(c, "eval"); }
+static Cell *core_lookupp(Cell *c) { return core_foop(c, "lookup"); }
+
 static Cell *frame(Cell *c) {
     Cell *n = cell_car(c);
     Cell *v = cell_cadr(c);
@@ -66,23 +76,8 @@ static Cell *eq_stringP(Cell *c, char *s) {
     return cell_nil;
 }
 
-static Cell *eq_pcconsP(Cell *c) { return eq_stringP(c, "%cons"); }
-static Cell *eq_pcevalP(Cell *c) { return eq_stringP(c, "%eval"); }
-static Cell *eq_listP(Cell *c) { return eq_stringP(c, "list"); }
-static Cell *eq_pclookupP(Cell *c) { return eq_stringP(c, "%lookup"); }
-
-/* XXX: only for testing! */
-static Cell *eq_pcechoP(Cell *c) { return eq_stringP(c, "%echo"); }
-
-static Cell *immutableP(Cell *c) {
-    if (eq_pcconsP(c) || eq_pcevalP(c) || eq_listP(c) ||
-	    eq_pclookupP(c)    || eq_pcechoP(c))
-	return cell_true;
-    return cell_nil;
-}
-
-static Cell *eq_pcpath_searchP(Cell *c) {
-    return eq_stringP(c, "%path-search");
+static Cell *eq_path_searchp(Cell *c) {
+    return eq_stringP(c, "path-search");
 }
 
 static Cell *make_path_search(Cell *c) {
@@ -152,18 +147,17 @@ struct call calls[] = {
     { "cdr", &cell_cdr },
     { "closure?", &closurep },
     { "const-closure", &const_closure },
+    { "core-cons?", &core_consp },
+    { "core-echo?", &core_echop },
+    { "core-eval?", &core_evalp },
+    { "core-lookup?", &core_lookupp },
+    { "core?", &corep },
     { "define?", &definep },
-    { "eq-%cons?", &eq_pcconsP },
-    { "eq-%echo?", &eq_pcechoP },
-    { "eq-%eval?", &eq_pcevalP },
-    { "eq-%lookup?", &eq_pclookupP },
-    { "eq-%path-search?", &eq_pcpath_searchP },
-    { "eq-list?", &eq_listP },
+    { "eq-path-search?", &eq_path_searchp },
     { "external", &external },
     { "external?", &externalp },
     { "frame", &frame },
     { "if?", &ifp },
-    { "immutable?", &immutableP },
     { "internal", &internal_call },
     { "internal?", &internalp },
     { "lambdap", &lambdap },
@@ -193,7 +187,10 @@ byte vm_encode_call(char *n) {
     k.name = n;
     c = bsearch(&k, calls, sizeof calls / sizeof(struct call),
 	    sizeof(struct call), call_compare);
-    assert(c);
+    if (!c) {
+        fprintf(stderr, "quux: fatal: cannot find call `%s'\n", n);
+        exit(1);
+    }
     i = c - calls;
     assert(i < 256);
     return i;

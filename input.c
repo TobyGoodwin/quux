@@ -15,10 +15,10 @@ Cell *parse_mem(char *a, size_t s) {
     struct pacc_parser *pp = pacc_new();
     pacc_input(pp, a, s);
     r = pacc_parse(pp);
-    fprintf(stderr, "parse_mem() returns %d\n", r);
+    //fprintf(stderr, "parse_mem() returns %d\n", r);
     if (r) {
         result = pacc_result(pp);
-        fprintf(stderr, "==> %s\n", cell_asprint(result));
+        //fprintf(stderr, "==> %s\n", cell_asprint(result));
         return result;
     }
     return 0;
