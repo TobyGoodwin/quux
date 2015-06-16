@@ -85,7 +85,7 @@ static Cell *make_path_search(Cell *c) {
     c = cell_cons(c, cell_nil);
     c = cell_cons_string("quote", c);
     c = cell_cons(c, cell_nil);
-    c = cell_cons_string("%path-search", c);
+    c = cell_cons_string("path-search", c);
     //c = cell_cons_string("lookup", c);
     //r = cell_cons(c, r);
     return c;

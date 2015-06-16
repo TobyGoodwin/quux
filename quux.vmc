@@ -50,13 +50,6 @@ eval-quote
     (call cadr)
     (continue)
 eval-lookup
-    # lookup a name
-    #(call cadr) (move val exp)
-    #(push cont) (loadcont ev-lookup1)
-    #(jump eval-dispatch)
-ev-lookup1
-    #(pop cont)
-    #(move val exp)
     (call lookup)
     (branch ev-lookup4)
     # no binding? (lookup qux) ==> (apply (lookup path-search) qux)
@@ -271,6 +264,7 @@ apply-closure
     (pop exp) (call cadadr) (move val exp)
     (jump eval-dispatch)
 fail
+    (nil val)
     (continue)
 end
 )

@@ -24,6 +24,28 @@ OK. Let's go with `(core cons)` etc. and see where we get to. Yup, that
 seems to work fine. Now done for `cons`, `echo`, `eval` and `lookup`.
 Errm, we really don't need `(core echo)` when we have `(internal echo)`.
 
+Now, the reason we need `list` in the parser output is this:
+
+  echo = internal echo
+
+needs to become
+
+    (define echo (list (quote internal) (quote echo)))
+
+And there's no way to avoid the `list`. So... do we want `(core list)`,
+or can I actually implement it in Scheme? Well, first of all, what does
+a function definition and application look like? If we say
+
+    (define e (lambda (x) (echo x)))
+
+then `e` is bound to a list comprising the constant `closure`, the list
+of formals, the procedure body, and the environment. However, I really
+can't work out at this time of night how `apply-closure` works. Oh, hang
+on. We have a list of formal parameters, and a list of actual
+parameters, so we just hook them up into a new environment frame. So to
+handle the (lambda x ...) case, we just need to see if formals is an
+atom, and if so wrap an extra layer around both formals and actuals.
+
 2015-06-14
 ==========
 

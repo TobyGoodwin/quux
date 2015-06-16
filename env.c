@@ -4,7 +4,7 @@
 #include "env.h"
 #include "streq.h"
 
-#define EnvTrace if (0)
+#define EnvTrace if (1)
 
 /* An environment is a list of frames. A frame is a pair: the car of the
  * frame is a list of names; the cdr of the frame is a list of values.

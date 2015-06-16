@@ -12,12 +12,13 @@ int main(void) {
     byte *interp;
 
     env = env_frame(cell_nil, cell_nil, cell_nil);
-    c = parse_string("\"(sequence (define echo (internal echo)) (echo (quote hello) (quote world)))");
-    fprintf(stderr, "c is %s\n", cell_asprint(c));
+    //c = parse_string("\"(sequence (define echo (internal echo)) (echo (quote hello) (quote world)))");
     //env_bind(env, cell_new_string("l"), c);
     vm_reg_set(vm_reg_env, env);
 
-    //c = parse_string("echo = (internal echo); echo hello world");
+    //c = parse_string("echo = internal echo; echo hello world");
+    c = parse_string("\"(sequence (define x (lambda x ((internal echo) x))) (x (quote one) (quote two)))");
+    fprintf(stderr, "c is %s\n", cell_asprint(c));
     //c = parse_string("eval x = { x }; (internal exit) $${ (internal parse-string) ${ (internal read-file) prelude.es } }");
     //c = parse_string("\"(l (quote %echo) (quote hello) (quote world))");
     //exit(0);

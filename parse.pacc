@@ -35,7 +35,7 @@ Item ← Atom
 Atom ← Dollar w:Word → w
      / w:Word → { syn_prefix("quote", w) }
 
-Molecule ← LPar $ l:ListNl $ RPar → { cell_cons_string("list", l) }
+Molecule ← LPar $ l:ListNl $ RPar → l
          / Dollar i:Item → { syn_eval(i) }
          / LBrace e:Es RBrace → { syn_lambda(cell_nil, e) }
          / "if":LexWord i:Item j:Item k:Item -> { syn_if(i, j, k) }
