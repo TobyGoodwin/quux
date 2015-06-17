@@ -91,6 +91,7 @@ eval-define-value
     (continue)
 ev-lambda
     # produces (closure exp env)
+    (push val) (call trace-on) (pop val)
     (call cdr)
     (move val exp2)
     (push val)
@@ -99,6 +100,7 @@ ev-lambda
     (move val exp2)
     (call const-closure) (move val exp)
     (cons)
+    (push val) (call trace-off) (pop val)
     (continue)
 ev-sequence
     # (sequence first second)
@@ -252,16 +254,37 @@ apply-external
     (continue)
 apply-closure
     # bind the arguments: closing env...
-    (push exp) (call caddr) (move val exp)
-    (nil exp2) (cons) (move val exp2)
-    # actual parameters from argl...
-    (move argl exp) (cons) (move val exp2)
-    # formal parameters...
-    (pop exp) (push exp) (call caadr) (move val exp) (cons)
+    (push val) (call trace-on) (pop val)
+
+    (push exp) # stack holds ((closure))
+    (call caadr) (move val exp) # exp = formals
+    # handle (lambda x ...)
+    (call pair?) (branch formals-list)
+
+    (nil exp2) (cons) # val = (formals)
+    (pop exp) (push val) # stack = ((formals))
+
+    (push exp) # stack: ((closure) (formals))
+    (move argl exp) (cons) (move val argl) # enlist arg list
+    (pop exp) # exp = (closure), stack = ((formals))
+    (jump closure-env)
+
+formals-list
+    (move exp val) (pop exp) (push val) # stack holds ((formals))
+
+closure-env # exp = (closure), argl = (actuals), stack = ((formals))
+    (pop exp2) (push exp) (push exp2) # stack = ((formals) (closure))
+    (call caddr) # val = (env)
+    (move val exp2)
+    (move argl exp) (cons)
+    (move val exp2)
+    (pop exp) (cons)
+
     # create a new environment frame...
     (move val exp) (call frame) (move val env)
     # extract the closure body
     (pop exp) (call cadadr) (move val exp)
+    (push val) (call trace-off) (pop val)
     (jump eval-dispatch)
 fail
     (nil val)

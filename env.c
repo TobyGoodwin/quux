@@ -72,8 +72,11 @@ Cell *env_lookup(Cell *env, Cell *name) {
                 cell_asprint(vals));
 	Cell *n, *v;
 	for (n = names, v = vals; n; n = cell_cdr(n), v = cell_cdr(v))
-	    if (streq(cell_car_string(n), tgt))
+	    if (streq(cell_car_string(n), tgt)) {
+                EnvTrace fprintf(stderr, "env_lookup(): returning %s\n",
+                        cell_asprint(cell_car(v)));
 		return cell_cons(cell_car(v), cell_nil);
+            }
     }
     EnvTrace fprintf(stderr, "env_lookup(): no binding found for %s\n", tgt);
     return cell_nil;
