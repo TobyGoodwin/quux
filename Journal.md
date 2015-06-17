@@ -1,3 +1,18 @@
+2015-06-16
+==========
+
+So the current subproject is to make quux understand `(lambda x x)`,
+specifically the case where the formal parameter list is a single value. 
+
+Currently we call `(internal frame)` with `exp` holding
+
+  ((names) (vals) (env))
+
+So I think all we need to do is look and see if names is an atom: if it
+is, cons it to `cell_nil` and do the same with vals. This could easily
+be done in the `frame` wrapper, or even `env_frame()`, but first I'll
+try it in the vm itself.
+
 2015-06-15
 ==========
 

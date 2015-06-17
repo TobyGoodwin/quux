@@ -596,7 +596,7 @@ int cell_fprint(FILE *f, Cell *c) {
 	 * part. */
 	if (list_headedP(c, "closure")) {
 	    //fmtprint(f, "-closure %O-", cell_cadadr(c));
-	    fprintf(f, "-closure-");
+	    fprintf(f, "-closure %s-", cell_asprint(cell_cadadr(c)));
 	    break;
 	}
 	car = cell_car(c);

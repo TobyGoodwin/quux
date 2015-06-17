@@ -1,5 +1,7 @@
 /* This ain't A-lists. */
 
+#include <assert.h>
+
 #include "cell.h"
 #include "env.h"
 #include "streq.h"
@@ -44,7 +46,8 @@ void env_bind(Cell *env, Cell *name, Cell *val) {
 /* attach a new frame to an environment */
 Cell *env_frame(Cell *env, Cell *names, Cell *values) {
     Cell *frame = cell_cons(names, values);
-
+    assert(cell_nullp(names) || cell_pairp(names));
+    assert(cell_nullp(values) || cell_pairp(values));
     env = cell_cons(frame, env);
     return env;
 }

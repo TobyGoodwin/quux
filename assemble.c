@@ -7,7 +7,7 @@
 #include "streq.h"
 #include "vm.h"
 
-#define AsTrace if (0)
+#define AsTrace if (1)
 
 /* XXX - sling? */
 static byte byte_code[600];

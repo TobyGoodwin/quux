@@ -17,7 +17,7 @@ int main(void) {
     vm_reg_set(vm_reg_env, env);
 
     //c = parse_string("echo = internal echo; echo hello world");
-    c = parse_string("\"(sequence (define x (lambda x ((internal echo) x))) (x (quote one) (quote two)))");
+    c = parse_string("\"(sequence (define foo (lambda x ((internal echo) x))) (foo (quote one) (quote two)))");
     fprintf(stderr, "c is %s\n", cell_asprint(c));
     //c = parse_string("eval x = { x }; (internal exit) $${ (internal parse-string) ${ (internal read-file) prelude.es } }");
     //c = parse_string("\"(l (quote %echo) (quote hello) (quote world))");

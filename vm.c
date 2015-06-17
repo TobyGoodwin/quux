@@ -9,7 +9,11 @@
 #include "streq.h"
 #include "vm.h"
 
-#define VmTrace if (1)
+static int tracing = 0;
+#define VmTrace if (tracing)
+
+static Cell *trace_off(Cell *c) { tracing = 0; return cell_nil; }
+static Cell *trace_on(Cell *c) { tracing = 1; return cell_nil; }
 
 static Cell *reg[8];
 
@@ -135,6 +139,7 @@ struct call calls[] = {
     { "atom?", &atomp },
     { "bind", &bind },
     { "caadr", &cell_caadr },
+    { "caar", &cell_caar },
     { "cadadr", &cell_cadadr },
     { "cadddr", &cell_cadddr },
     { "caddr", &cell_caddr },
@@ -166,10 +171,12 @@ struct call calls[] = {
     { "make-prim-ext", &make_prim_ext },
     { "null?", &nullp },
     { "number?", &fxnump },
-    { "pairp", &pairp },
+    { "pair?", &pairp },
     { "quote?", &quotep },
     { "reverse", &list_reverse },
     { "sequence?", &sequencep },
+    { "trace-off", &trace_off },
+    { "trace-on", &trace_on },
     { "wordp", &wordp }
 };
 
