@@ -8,16 +8,22 @@
 #include "vm.h"
 
 int main(void) {
-    Cell *c, *env, *quux;
+    Cell *env, *ns, *vs;
+    Cell *c, *quux;
     byte *interp;
 
-    env = env_frame(cell_nil, cell_nil, cell_nil);
+    ns = cell_cons_string("list", cell_nil);
+    vs = parse_string("%((closure (x x) ((()))))"); 
+    fprintf(stderr, "vs is %s\n", cell_asprint(vs));
+    env = env_frame(cell_nil, ns, vs);
+    //env = env_frame(cell_nil, cell_nil, cell_nil);
     //c = parse_string("\"(sequence (define echo (internal echo)) (echo (quote hello) (quote world)))");
     //env_bind(env, cell_new_string("l"), c);
     vm_reg_set(vm_reg_env, env);
 
     //c = parse_string("echo = internal echo; echo hello world");
-    c = parse_string("\"(sequence (define foo (lambda (x) ((internal echo) x))) (foo (quote one) (quote two)))");
+    //c = parse_string("%(define list (lambda x x))");
+    c = parse_string("%(list (quote one) (quote two))");
     fprintf(stderr, "c is %s\n", cell_asprint(c));
     //c = parse_string("eval x = { x }; (internal exit) $${ (internal parse-string) ${ (internal read-file) prelude.es } }");
     //c = parse_string("\"(l (quote %echo) (quote hello) (quote world))");

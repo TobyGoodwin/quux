@@ -48,6 +48,10 @@ Cell *env_frame(Cell *env, Cell *names, Cell *values) {
     Cell *frame = cell_cons(names, values);
     assert(cell_nullp(names) || cell_pairp(names));
     assert(cell_nullp(values) || cell_pairp(values));
+    EnvTrace fprintf(stderr, "env_frame(): names is %s\n",
+            cell_asprint(names));
+    EnvTrace fprintf(stderr, "env_frame(): values is %s\n",
+            cell_asprint(values));
     env = cell_cons(frame, env);
     return env;
 }
