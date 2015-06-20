@@ -10,7 +10,7 @@
 #include "vm.h"
 
 static int tracing = 0;
-#define VmTrace if (tracing)
+#define VmTrace if (1)
 
 static Cell *trace_off(Cell *c) { tracing = 0; return cell_nil; }
 static Cell *trace_on(Cell *c) { tracing = 1; return cell_nil; }
@@ -18,6 +18,7 @@ static Cell *trace_on(Cell *c) { tracing = 1; return cell_nil; }
 static Cell *reg[8];
 
 static Cell *applyp(Cell *c) { return list_headedP(c, "apply"); }
+static Cell *beginp(Cell *c) { return list_headedP(c, "begin"); }
 static Cell *definep(Cell *c) { return list_headedP(c, "define"); }
 static Cell *closurep(Cell *c) { return list_headedP(c, "closure"); }
 static Cell *concatp(Cell *c) { return list_headedP(c, "concat"); }
@@ -28,7 +29,6 @@ static Cell *internalp(Cell *c) { return list_headedP(c, "internal"); }
 static Cell *lambdap(Cell *c) { return list_headedP(c, "lambda"); }
 static Cell *lookupp(Cell *c) { return list_headedP(c, "lookup"); }
 static Cell *quotep(Cell *c) { return list_headedP(c, "quote"); }
-static Cell *sequencep(Cell *c) { return list_headedP(c, "sequence"); }
 static Cell *wordp(Cell *c) { return list_headedP(c, "word"); }
 
 static Cell *vm_gq(Cell *c) {
@@ -137,6 +137,7 @@ struct call calls[] = {
     { "application?", &pairp },
     { "apply?", &applyp },
     { "atom?", &atomp },
+    { "begin?", &beginp },
     { "bind", &bind },
     { "caadr", &cell_caadr },
     { "caar", &cell_caar },
@@ -174,7 +175,6 @@ struct call calls[] = {
     { "pair?", &pairp },
     { "quote?", &quotep },
     { "reverse", &list_reverse },
-    { "sequence?", &sequencep },
     { "trace-off", &trace_off },
     { "trace-on", &trace_on },
     { "wordp", &wordp }

@@ -7,7 +7,7 @@ eval-dispatch
     (call lambdap) (branch ev-lambda)
     (call core?) (branch self-evaluating)
     (call internal?) (branch self-evaluating)
-    (call sequence?) (branch ev-sequence)
+    (call begin?) (branch ev-sequence)
     (call if?) (branch eval-if)
     (call apply?) (branch apply-apply)
     # must be an application

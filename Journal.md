@@ -1,3 +1,39 @@
+2015-06-19
+==========
+
+Back to trying to get `prelude.quux` working. Back to fighting
+`unquote`. It has to go. Restate my assumptions...
+
+It would be possible to implement a shell in Scheme, and if that were
+anything at all like quux, the parser might generate code like `(command
+'ls '/tmp)`. But that's not what I'm trying to do at all.
+
+Scheme *is* the shell. And that's why I want code like `(ls '/tmp)`,
+with a special dispensation for the case where `ls` is not bound. (I was
+looking for a better name for `path-search`, and it is `unbound`.) So
+the parser needs to generate the right code in the first place, not
+attempt to patch it up afterwards.
+
+2015-06-17
+==========
+
+Ugh. The vm is an annoying thing to program. (Having an instruction to
+access stack locations other than the top might be useful.) However, I
+got there in the end. I can now define `list` in Scheme in the initial
+environment, and it works.
+
+Currently `quote`, `sequence` (which should really be called `begin`)
+are implemented in the vm, and have those fixed names. But `cons`,
+`eval`, and `lookup` are implemented with this `(core foo)` syntax I
+invented. (Should `lookup` even exist? How does it differ from `eval`?)
+
+Turns out it's easy enough to build an initial environment which binds
+`cons` to `(core cons)`.
+
+Oh, now, the difference between `quote` and `cons` is that `quote` is a
+special form, whereas `cons` is just a function. One day, if we have
+syntax transformers, that could be tidied up. For now, though, 
+
 2015-06-16
 ==========
 

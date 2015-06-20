@@ -13,20 +13,19 @@ int main(void) {
     byte *interp;
 
     ns = cell_cons_string("list", cell_nil);
-    vs = parse_string("%((closure (x x) ((()))))"); 
+    ns = parse_string("%(cons eval list)");
+    fprintf(stderr, "ns is %s\n", cell_asprint(ns));
+    vs = parse_string("%((core cons) (core eval) (closure (x x) ((()))))"); 
     fprintf(stderr, "vs is %s\n", cell_asprint(vs));
     env = env_frame(cell_nil, ns, vs);
-    //env = env_frame(cell_nil, cell_nil, cell_nil);
-    //c = parse_string("\"(sequence (define echo (internal echo)) (echo (quote hello) (quote world)))");
-    //env_bind(env, cell_new_string("l"), c);
     vm_reg_set(vm_reg_env, env);
 
+    //c = parse_string("read-file = internal read-file; read-file prelude.quux");
+    //c = parse_string("(internal read-file) prelude.quux");
+    c = parse_string("%((internal echo) (list (quote hello) (quote world)))");
     //c = parse_string("echo = internal echo; echo hello world");
-    //c = parse_string("%(define list (lambda x x))");
-    c = parse_string("%(list (quote one) (quote two))");
+    //c = parse_string("(internal exit) $${ (internal parse-string) ${ (internal read-file) prelude.es } }");
     fprintf(stderr, "c is %s\n", cell_asprint(c));
-    //c = parse_string("eval x = { x }; (internal exit) $${ (internal parse-string) ${ (internal read-file) prelude.es } }");
-    //c = parse_string("\"(l (quote %echo) (quote hello) (quote world))");
     //exit(0);
 
     quux = parse_file("quux.vmc");
@@ -36,6 +35,7 @@ int main(void) {
     vm_reg_set(vm_reg_exp, c);
     fprintf(stderr, "exp is %s\n", cell_asprint(vm_reg_get(vm_reg_exp)));
     vm_run(interp);
+    fprintf(stderr, "val is %s\n", cell_asprint(vm_reg_get(vm_reg_val)));
 
     return 0;
 }

@@ -9,18 +9,17 @@ Form ← Raw
      / Defn
      / Command
 
-Raw ← Percent l:RawList → { cell_car(l) }
+Raw ← Percent i:RawItem → i
 
 Defn ← ws:Words Equals l:List → { syn_define(ws, l) }
 
-Body ← f:Form b:Body → { syn_sequence(f, b) }
-     / Form
-
 Command ← i:Item l:List → { syn_command(i, l) }
+#Command ← i:RawList l:List → { cell_cons(i, l) }
 
-RawList ← LPar l:RawList RPar k:RawList →
-                { list_append(cell_cons(l, cell_nil), k) }
-        / w:Word l:RawList → { cell_cons(w, l) }
+RawItem ← Word
+        / LPar l:RawList RPar → l
+
+RawList ← a:RawItem d:RawList → { cell_cons(a, d) }
         / ε → cell_nil
 
 List ← i:Item $ l:List → { cell_cons(i, l) }

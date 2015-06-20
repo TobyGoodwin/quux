@@ -2,14 +2,14 @@
 
 #include "streq.h"
 
-#define SynTrace if (0)
-/* syn_sequence() yields (sequence t1 t2). If t2 is already a sequence, fold
- * t1 into it. */
+#define SynTrace if (1)
+/* syn_sequence() yields (begin t1 t2). If t2 is already a sequence, fold t1
+ * into it. */
 extern Cell *syn_sequence(Cell *t1, Cell *t2) {
     Cell *r;
     if (!t1) return t2;
     if (!t2) return t1;
-    if (list_headedP(t2, "sequence")) {
+    if (list_headedP(t2, "begin")) {
 	t1 = cell_consM(t1, cell_cdr(t2));
 	cell_cdr_set(t2, t1);
         SynTrace fprintf(stderr, "syn_sequence(): %s\n", cell_asprint(t2));
@@ -17,7 +17,7 @@ extern Cell *syn_sequence(Cell *t1, Cell *t2) {
     }
     r = cell_cons(t2, cell_nil);
     r = cell_cons(t1, r);
-    r = cell_cons_string("sequence", r);
+    r = cell_cons_string("begin", r);
     SynTrace fprintf(stderr, "syn_sequence(): %s\n", cell_asprint(r));
     return r;
 }
@@ -69,18 +69,23 @@ Cell *syn_define(Cell *left, Cell *right) {
  * carefully. (In mitigation, unit_parse.c checks that the obvious cases
  * work OK.) */
 Cell *unquote(Cell *c) {
+    Cell *p;
+
     SynTrace fprintf(stderr, "unquote(%s)\n", cell_asprint(c));
     /* The obvious case: (quote x) ==> x */
     if (list_headedP(c, "quote"))
 	return cell_cadr(c);
-    return c;
 
     if (cell_atomp(c))
-        return syn_prefix("lookup", c);
+        return syn_prefix("eval", c);
+
     /* Unquote a lambda expression by applying it. */
     if (list_headedP(c, "lambda"))
 	if (!cell_cadr(c)) /* null args => closure */
 	    return cell_cons(c, cell_nil);
+
+    c = cell_cons(unquote(cell_car(c)), unquote(cell_cdr(c)));
+
     return c;
 }
 
