@@ -1,3 +1,1 @@
-echo = internal echo
-
-echo hello from prelude
+(internal echo) hello from prelude
