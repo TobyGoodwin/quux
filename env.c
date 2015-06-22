@@ -48,6 +48,8 @@ Cell *env_frame(Cell *env, Cell *names, Cell *values) {
     Cell *frame = cell_cons(names, values);
     assert(cell_nullp(names) || cell_pairp(names));
     assert(cell_nullp(values) || cell_pairp(values));
+    EnvTrace fprintf(stderr, "env_frame(): env is %s\n",
+            cell_asprint(env));
     EnvTrace fprintf(stderr, "env_frame(): names is %s\n",
             cell_asprint(names));
     EnvTrace fprintf(stderr, "env_frame(): values is %s\n",
@@ -65,17 +67,20 @@ Cell *env_lookup(Cell *env, Cell *name) {
     char *tgt = cell_car_string(name);
     Cell *e;
 
-    EnvTrace fprintf(stderr, "env_lookup(%s)\n", tgt);
+    EnvTrace fprintf(stderr, "env_lookup(%s, %s)\n", cell_asprint(env), tgt);
     for (e = env; e; e = cell_cdr(e)) {
-	Cell *frame = cell_car_cell(e);
-	Cell *names = cell_car_cell(frame);
-	EnvTrace fprintf(stderr, "env_lookup(): names is %s\n",
-                cell_asprint(names));
-	Cell *vals = cell_cdr(frame);
-	EnvTrace fprintf(stderr, "env_lookup(): vals is %s\n",
-                cell_asprint(vals));
+	Cell *f, *ns, *vs;
+       
+        f = cell_car_cell(e);
+        assert(f);
+	ns = cell_car_cell(f);
+	vs = cell_cdr(f);
+	EnvTrace fprintf(stderr, "env_lookup(): ns is %s\n",
+                cell_asprint(ns));
+	EnvTrace fprintf(stderr, "env_lookup(): vs is %s\n",
+                cell_asprint(vs));
 	Cell *n, *v;
-	for (n = names, v = vals; n; n = cell_cdr(n), v = cell_cdr(v))
+	for (n = ns, v = vs; n; n = cell_cdr(n), v = cell_cdr(v))
 	    if (streq(cell_car_string(n), tgt)) {
                 EnvTrace fprintf(stderr, "env_lookup(): returning %s\n",
                         cell_asprint(cell_car(v)));

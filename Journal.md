@@ -8,11 +8,37 @@ It would be possible to implement a shell in Scheme, and if that were
 anything at all like quux, the parser might generate code like `(command
 'ls '/tmp)`. But that's not what I'm trying to do at all.
 
-Scheme *is* the shell. And that's why I want code like `(ls '/tmp)`,
-with a special dispensation for the case where `ls` is not bound. (I was
-looking for a better name for `path-search`, and it is `unbound`.) So
-the parser needs to generate the right code in the first place, not
-attempt to patch it up afterwards.
+Scheme *is* the shell. And that's why I want the parser to build code
+like `(ls '/tmp)`, with a special dispensation for the case where `ls`
+is not bound. (I was looking for a better name for `path-search`, and it
+is `unbound`.) So the parser needs to generate the right code in the
+first place, not attempt to patch it up afterwards.
+
+OK. So that's a *much* neater grammar, that correctly handles the cases
+of `echo` and `(internal echo)`. Doesn't do `$e` yet... oh, ah, hmmm.
+I'm not sure that `echo = internal echo; echo foo` should print
+anything. Surely we need to say `$echo foo`? And, if not, what would
+`$echo foo` do there? Shouldn't we need something like `echo x = {
+(internal read) x}; echo foo` for it to work?
+
+No, that's all right, since `echo` is bound to (`(internal echo)` which
+is bound to) a closure. If we said `echo = /bin/echo`, then you'd need
+the `$` to turn the string into a closure. Errm, except you wouldn't,
+actually, would you? As the normal unbound procedure would make it work
+anyway...
+
+So this is something I hadn't anticipated, but I think it works out all
+right. In a "normal" shell, the command word is effectively *always*
+handed to `path-search`, except there's a hacky extra symbol table (of
+functions, aliases, but *not* "variables") that comes before
+`path-search`. In those shells, `$echo` adds a lookup in the variable
+symbol table before the usual procedure. In quux, we always start with
+the (single) symbol table, and only if that yields nothing do we invoke
+the `path-search` procedure.
+
+Hmm. Also, should we do something special if a command starts with `/`?
+Well, don't 100% need to, as `(external /bin/echo)` is an unambiguous
+way to run the command.
 
 2015-06-17
 ==========

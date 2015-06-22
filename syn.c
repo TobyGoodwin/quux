@@ -3,6 +3,7 @@
 #include "streq.h"
 
 #define SynTrace if (1)
+
 /* syn_sequence() yields (begin t1 t2). If t2 is already a sequence, fold t1
  * into it. */
 extern Cell *syn_sequence(Cell *t1, Cell *t2) {
@@ -101,6 +102,7 @@ Cell *syn_prefix(char *p, Cell *c) {
     return cell_cons_string(p, cell_cons(c, cell_nil));
 }
 
+/* XXX this seems too "clever" */
 Cell *syn_eval(Cell *c) {
     fprintf(stderr, "make_eval(): evaluand was %s\n", cell_asprint(c));
     if (list_headedP(c, "quote"))
@@ -109,8 +111,8 @@ Cell *syn_eval(Cell *c) {
         c = cell_cons(c, cell_nil);
     /* Parentheses after a $ imply grouping, not listage. For example,
      * "foobar=qux; echo $(foo^bar)" ==> qux */
-    else if (list_headedP(c, "%list"))
-        cell_car_set_string(c, "%eval");
+    else if (list_headedP(c, "list"))
+        cell_car_set_string(c, "eval");
     else
         c = syn_prefix("eval", c);
     fprintf(stderr, "make_eval(): evaluand is now %s\n", cell_asprint(c));

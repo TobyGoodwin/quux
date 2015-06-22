@@ -15,16 +15,19 @@ int main(void) {
     ns = cell_cons_string("list", cell_nil);
     ns = parse_string("%(cons eval list)");
     fprintf(stderr, "ns is %s\n", cell_asprint(ns));
-    vs = parse_string("%((core cons) (core eval) (closure (x x) ((()))))"); 
+    vs = parse_string("%((core cons) (core eval) (closure (x x) (())))"); 
     fprintf(stderr, "vs is %s\n", cell_asprint(vs));
-    env = env_frame(cell_nil, ns, vs);
+    env = cell_cons(cell_cons(ns, vs), cell_nil);
+    fprintf(stderr, "env is %s\n", cell_asprint(env));
     vm_reg_set(vm_reg_env, env);
 
     //c = parse_string("read-file = internal read-file; read-file prelude.quux");
-    //c = parse_string("(internal read-file) prelude.quux");
-    c = parse_string("%((internal echo) (list (quote hello) (quote world)))");
+    //c = parse_string("(internal echo) $${ (internal parse-string) ${ (internal read-file) prelude.quux } }");
+    c = parse_string("%(eval (list (list (quote internal) (quote echo)) (list (quote quote) (quote foo))))");
+    //c = parse_string("(begin (define echo (list (quote internal) (quote echo))) (echo (quote hello) (quote from) (quote prelude)))");
+    //c = parse_string("%((internal echo) (list (quote hello) (quote world)))");
     //c = parse_string("echo = internal echo; echo hello world");
-    //c = parse_string("(internal exit) $${ (internal parse-string) ${ (internal read-file) prelude.es } }");
+    //c = parse_string("(internal exit) $${ (internal parse-string) ${ (internal read-file) prelude.quux } }");
     fprintf(stderr, "c is %s\n", cell_asprint(c));
     //exit(0);
 
