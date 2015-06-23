@@ -1,3 +1,20 @@
+2015-06-22
+==========
+
+Finally got back a state where `prelude.quux` works... well, sort of.
+Unfortunately bindings don't work. I *think* what's happening is that
+somewhere along the line something is getting mutated when it should be
+copied, and we're losing the initial environment frame. But I'm not
+sure.
+
+No, it wasn't even as complicated as that. I'd used a `caddr` where I
+should have used `cddr`. And handling `(lambda x ...)` case messed up
+the no formals case, because `atom?` (and `pair?`) both group `()` with
+proper atoms. Obviously the simple fix is to use `pair?` or `null?`.
+(The `list?` predicate would do the job properly, although it probably
+does more work than is strictly needed here. But in any case I haven't
+implemented it yet.)
+
 2015-06-19
 ==========
 

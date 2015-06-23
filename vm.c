@@ -10,7 +10,7 @@
 #include "vm.h"
 
 static int tracing = 0;
-#define VmTrace if (1)
+#define VmTrace if (0)
 
 static Cell *trace_off(Cell *c) { tracing = 0; return cell_nil; }
 static Cell *trace_on(Cell *c) { tracing = 1; return cell_nil; }
@@ -61,9 +61,12 @@ static Cell *core_lookupp(Cell *c) { return core_foop(c, "lookup"); }
 static Cell *frame(Cell *c) {
     Cell *n = cell_car(c);
     Cell *v = cell_cadr(c);
-    Cell *e = cell_caddr(c);
+    Cell *e = cell_cddr(c);
     VmTrace fprintf(stderr, "frame(): n is %s, v is %s, e is %s\n",
             cell_asprint(n), cell_asprint(v), cell_asprint(e));
+    /* There's no point (although no harm) in adding an empty frame. */
+    if (cell_nullp(n))
+        return e;
     return env_frame(e, n, v);
 }
 
@@ -222,6 +225,7 @@ void vm_run(byte *code) {
     reg[vm_reg_cont] = cell_new_fxnum(operand);
 
     while (code[ip] != vm_end) {
+        fprintf(stderr, "env: %s\n", cell_asprint(reg[vm_reg_env]));
 	VmTrace if (ip == 2) {
 	    fprintf(stderr, "vm_run(): EVAL %s\n",
                     cell_asprint(reg[vm_reg_exp]));

@@ -260,6 +260,7 @@ apply-closure
     (call caadr) (move val exp) # exp = formals
     # handle (lambda x ...)
     (call pair?) (branch formals-list)
+    (call null?) (branch formals-list)
 
     (nil exp2) (cons) # val = (formals)
     (pop exp) (push val) # stack = ((formals))

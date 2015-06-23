@@ -1,1 +1,4 @@
-(internal echo) hello from prelude
+echo = internal echo
+echo and some more
+
+echo another echo

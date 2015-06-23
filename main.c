@@ -15,7 +15,7 @@ int main(void) {
     ns = cell_cons_string("list", cell_nil);
     ns = parse_string("%(cons eval list)");
     fprintf(stderr, "ns is %s\n", cell_asprint(ns));
-    vs = parse_string("%((core cons) (core eval) (closure (x x) (())))"); 
+    vs = parse_string("%((core cons) (core eval) (closure (x x) ()))"); 
     fprintf(stderr, "vs is %s\n", cell_asprint(vs));
     env = cell_cons(cell_cons(ns, vs), cell_nil);
     fprintf(stderr, "env is %s\n", cell_asprint(env));
