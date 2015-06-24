@@ -1,4 +1,1 @@
-echo = internal echo
-echo and some more
-
-echo another echo
+%(begin (if (quote foo) ((lambda () ((internal echo) (quote foo)))) ((lambda () ((internal echo) (quote bar))))) (if () ((lambda () ((internal echo) (quote baz)))) ((lambda () ((internal echo) (quote quux)))))) 
