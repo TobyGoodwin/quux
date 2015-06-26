@@ -1,4 +1,1 @@
-%(begin ((if (quote yes) (lambda () ((internal echo) (quote foo))) (lambda () ((internal echo) (quote bar)))) ((if () (lambda () ((internal echo) (quote baz))) (lambda () ((internal echo) (quote quux))))))) 
-
-if yes { echo foo } { echo bar }
-if () { echo baz } { echo quux }
+%(begin ((if (quote yes) (lambda () ((internal echo) (quote foo))) (lambda () ((internal echo) (quote bar))))) ((if () (lambda () ((internal echo) (quote baz))) (lambda () ((internal echo) (quote quux)))))) 

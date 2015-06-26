@@ -1,3 +1,14 @@
+2015-06-26
+==========
+
+Here's a working version of the Scheme code that uses closures in the
+handles of `if`:
+
+    %(begin ((if (quote yes) (lambda () ((internal echo) (quote foo))) (lambda () ((internal echo) (quote bar))))) ((if () (lambda () ((internal echo) (quote baz))) (lambda () ((internal echo) (quote quux))))))
+
+I'm wondering if we actually need those closures? They don't seem to be
+doing anything...
+
 2015-06-24
 ==========
 
@@ -28,7 +39,7 @@ get `else` (wrong: should be `cadr`).
 
 Now, this code behaves correctly:
 
-%(begin ((internal echo) (if (quote yes) (quote foo) (quote bar))) ((internal echo) (if () (quote baz) (quote quux))))
+    %(begin ((internal echo) (if (quote yes) (quote foo) (quote bar))) ((internal echo) (if () (quote baz) (quote quux))))
 
 
 2015-06-22

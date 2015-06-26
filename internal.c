@@ -14,6 +14,7 @@
 #include "streq.h"
 
 static Cell *echo(Cell *a) {
+    fprintf(stderr, "about to echo\n");
     printf("%s\n", cell_asprint(a));
     return cell_cons_string("echo_done", cell_nil);
 }

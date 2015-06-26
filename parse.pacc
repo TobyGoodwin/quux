@@ -15,6 +15,7 @@ Defn ← ws:Words Equals l:List → { syn_define(ws, l) }
 
 #Command ← i:Item l:List → { syn_command(i, l) }
 Command ← "if":LexWord i:Item j:Command k:Command → { syn_if(i, j, k) }
+        / LBrace e:Es RBrace → { syn_lambda(cell_nil, e) }
         / i:RawItem l:List → { cell_cons(i, l) }
 
 RawItem ← Word
