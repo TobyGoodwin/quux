@@ -14,7 +14,8 @@ Raw ← Percent i:RawItem → i
 Defn ← ws:Words Equals l:List → { syn_define(ws, l) }
 
 #Command ← i:Item l:List → { syn_command(i, l) }
-Command ← i:RawItem l:List → { cell_cons(i, l) }
+Command ← "if":LexWord i:Item j:Command k:Command → { syn_if(i, j, k) }
+        / i:RawItem l:List → { cell_cons(i, l) }
 
 RawItem ← Word
         / LPar l:RawList RPar → l

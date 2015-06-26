@@ -91,7 +91,6 @@ eval-define-value
     (continue)
 ev-lambda
     # produces (closure exp env)
-    (push val) (call trace-on) (pop val)
     (call cdr)
     (move val exp2)
     (push val)
@@ -100,7 +99,6 @@ ev-lambda
     (move val exp2)
     (call const-closure) (move val exp)
     (cons)
-    (push val) (call trace-off) (pop val)
     (continue)
 ev-sequence
     # (sequence first second)
@@ -126,6 +124,7 @@ eval-sequence-last
     # tail-recursion (for the sequence case)
     (jump eval-dispatch)
 eval-if
+    (push val) (call trace-on) (pop val)
     # (if test then else)
     (push cont) (push env)
     # save the two branches in unev
@@ -139,13 +138,15 @@ eval-if-branch
     (move unev exp)
     (branch eval-if-then)
     # test failed
-    (call cdr) (move val exp)
+    (call cadr)
+    (jump eval-if-final)
 eval-if-then
     # test succeeded
     (call car)
 eval-if-final
     (move val exp)
     (pop cont)
+    (push val) (call trace-off) (pop val)
     (jump eval-dispatch)
 apply-apply
     # (apply fun args)
@@ -254,8 +255,6 @@ apply-external
     (continue)
 apply-closure
     # bind the arguments: closing env...
-    (push val) (call trace-on) (pop val)
-
     (push exp) # stack holds ((closure))
     (call caadr) (move val exp) # exp = formals
     # handle (lambda x ...)
@@ -285,7 +284,6 @@ closure-env # exp = (closure), argl = (actuals), stack = ((formals))
     (move val exp) (call frame) (move val env)
     # extract the closure body
     (pop exp) (call cadadr) (move val exp)
-    (push val) (call trace-off) (pop val)
     (jump eval-dispatch)
 fail
     (nil val)

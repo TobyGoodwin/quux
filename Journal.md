@@ -1,3 +1,36 @@
+2015-06-24
+==========
+
+Next things to look at: make sure that `if` works, and test that tail
+recursion is implemented, including in `if` branches.
+
+Hmm. So this code:
+
+    yes = yes
+    no = ()
+    if $no { echo yes } { echo no }
+    echo in between
+    if $yes { echo yes } { echo no }
+
+prints this:
+
+    (no)
+    (in between)
+    ((-closure (echo (quote yes))-))
+
+So it looks like we're missing a level of eval for the true branch. But
+then I'm not sure we're creating the right scheme code in the first
+place.
+
+OK. So there was a bug in the VM implementation of `if`. Given the list
+`(then else)`, we were using `car` to get `then` (right), but `cdr` to
+get `else` (wrong: should be `cadr`).
+
+Now, this code behaves correctly:
+
+%(begin ((internal echo) (if (quote yes) (quote foo) (quote bar))) ((internal echo) (if () (quote baz) (quote quux))))
+
+
 2015-06-22
 ==========
 

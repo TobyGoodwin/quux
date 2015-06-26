@@ -146,5 +146,6 @@ Cell *syn_lambda(Cell *args, Cell *body) {
 }
 
 Cell *syn_if(Cell *i, Cell *j, Cell *k) {
-    return 0;
+    return cell_cons_string("if", cell_cons(i,
+                cell_cons(j, (cell_cons(k, cell_nil)))));
 }

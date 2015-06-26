@@ -19,9 +19,12 @@ static Cell *echo(Cell *a) {
 }
 
 static Cell *intl_parse_string(Cell *a) {
+    Cell *r;
     if (cell_nullp(a)) return cell_nil;
 
-    return parse_string(cell_car_string(a));
+    r = parse_string(cell_car_string(a));
+    fprintf(stderr, "parse_string: returning %s\n", cell_asprint(r));
+    return r;
 }
 
 static Cell *intl_exit(Cell *a) {

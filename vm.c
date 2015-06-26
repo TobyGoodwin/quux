@@ -225,7 +225,7 @@ void vm_run(byte *code) {
     reg[vm_reg_cont] = cell_new_fxnum(operand);
 
     while (code[ip] != vm_end) {
-        fprintf(stderr, "env: %s\n", cell_asprint(reg[vm_reg_env]));
+        //fprintf(stderr, "env: %s\n", cell_asprint(reg[vm_reg_env]));
 	VmTrace if (ip == 2) {
 	    fprintf(stderr, "vm_run(): EVAL %s\n",
                     cell_asprint(reg[vm_reg_exp]));
