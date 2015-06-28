@@ -22,7 +22,7 @@ int main(void) {
     vm_reg_set(vm_reg_env, env);
 
     //c = parse_string("read-file = internal read-file; read-file prelude.quux");
-    c = parse_string("(internal echo) $${ (internal parse-string) ${ (internal read-file) prelude.quux } }");
+    c = parse_string("(internal exit) $${ (internal parse-string) ${ (internal read-file) prelude.quux } }");
     //c = parse_string("%(eval (list (list (quote internal) (quote echo)) (list (quote quote) (quote foo))))");
     //c = parse_string("(begin (define echo (list (quote internal) (quote echo))) (echo (quote hello) (quote from) (quote prelude)))");
     //c = parse_string("%((internal echo) (list (quote hello) (quote world)))");

@@ -9,6 +9,29 @@ handles of `if`:
 I'm wondering if we actually need those closures? They don't seem to be
 doing anything...
 
+Yeah, I think they can go, only now there's another oddity. (I really
+ought to be saving these all up as test cases.) Oh, it was just that the
+outermost command of the whole thing was '(internal echo)`, instead of
+`(internal exit)`. (Now I'm wondering why I wasn't seeing a spurious
+echo before!)
+
+Anyway, yes, it turns out that we can greatly simplify the above to:
+
+    %(begin ((if (quote yes) ((internal echo) (quote foo)) ((internal echo) (quote bar)))) ((if () ((internal echo) (quote baz)) ((internal echo) (quote quux)))))
+
+However, I think in general we do want `if this { then that } { else
+other }` to produce closures so that variable bindings within the forks
+don't leak. But that's more to do with the braces creating a new frame
+than anything else.
+
+I'd really like `if` to be completely general (as it is in Scheme), so
+we can write all of these:
+
+   echo if cond this that
+   if cond { this } { that }
+   if cond this that args
+
+
 2015-06-24
 ==========
 

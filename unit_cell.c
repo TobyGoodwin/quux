@@ -3,14 +3,8 @@
 #include <stdlib.h>
 
 #include "cell.h"
+#include "check.h"
 #include "streq.h"
-
-int n = 1;
-
-void check(int x) {
-    if (!x) printf("not ");
-    printf("ok %d\n", n++);
-}
 
 /* the nil cell */
 void test0(void) {
@@ -188,7 +182,7 @@ void test9(void) {
 
 /* XXX there are a lot more cell functions to test */
 int main(void) {
-    printf("1..27\n");
+    printf("1..28\n");
     test0();
     test1();
     test2();
