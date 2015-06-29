@@ -32,8 +32,6 @@ int main(void) {
     //exit(0);
 
     quux = parse_file("quux.vmc");
-    //quux = cell_caddr(quux); /* remove unneeded "(define vmc ...)" */
-    //quux = cell_to_vmc(quux);
     interp = assemble(quux);
     vm_reg_set(vm_reg_exp, c);
     fprintf(stderr, "exp is %s\n", cell_asprint(vm_reg_get(vm_reg_exp)));

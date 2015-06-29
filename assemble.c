@@ -133,25 +133,3 @@ byte *assemble(Cell *code) {
     }
     return byte_code;
 }
-
-/* cell_to_vmc() handles parse trees that are (nested) lists, removing
- * "%list", "%glob", and "%quote" annotations, and building the result we
- * would get if we had the (Schemely) cell_read().
- */
-Cell *cell_to_vmc(Cell *c) {
-    Cell *result;
-    if (cell_nullp(c)) return cell_nil;
-    if (list_headedP(c, "list"))
-        c = cell_cdr(c);
-    if (list_headedP(c, "glob")) {
-	result = cell_cadadr(c);
-    } else if (list_headedP(c, "quote")) {
-	result = cell_cadr(c);
-    } else if (cell_pairp(c)) {
-	Cell *l = cell_to_vmc(cell_car(c));
-	Cell *r = cell_to_vmc(cell_cdr(c));
-	result = cell_cons(l, r);
-    } else 
-	 result = c;
-    return result;
-}

@@ -18,7 +18,7 @@ Command ← "if":LexWord i:Item j:Command k:Command → { syn_if(i, j, k) }
         / LBrace e:Es RBrace → { syn_lambda(cell_nil, e) }
         / i:RawItem l:List → { cell_cons(i, l) }
 
-RawList ← _ a:RawItem __ d:RawList → { cell_cons(a, d) }
+RawList ← __ a:RawItem __ d:RawList → { cell_cons(a, d) }
         / __ → cell_nil
 
 RawItem ← Word
