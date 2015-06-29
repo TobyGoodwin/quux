@@ -1,4 +1,4 @@
-vmc = (
+%(
 eval-dispatch
     (call atom?) (branch eval-atom)
     #(call list?) (branch evlis)
